@@ -1,14 +1,8 @@
---[[
-    KIÊN | LỚP 94 — THCS NHUẬN PHÚ TÂN
-    BLACK NEBULA — Part 1: Core & UI Setup
-]]
-
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local TeleportService = game:GetService("TeleportService")
 local RunService = game:GetService("RunService")
-local Lighting = game:GetService("Lighting")
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
@@ -19,7 +13,6 @@ if old then old:Destroy() end
 local oldFly = playerGui:FindFirstChild("KienFlyGUIV3")
 if oldFly then oldFly:Destroy() end
 
---// COLORS
 local C = {
     Background = Color3.fromRGB(10, 10, 14),
     Panel = Color3.fromRGB(17, 17, 23),
@@ -42,12 +35,8 @@ local function round(parent, radius)
     create("UICorner", { CornerRadius = UDim.new(0, radius or 10) }, parent)
 end
 
-local function stroke(parent, color, thickness, transparency)
-    return create("UIStroke", {
-        Color = color or C.Red,
-        Thickness = thickness or 1,
-        Transparency = transparency or 0,
-    }, parent)
+local function stroke(parent, color, thickness)
+    return create("UIStroke", { Color = color or C.Red, Thickness = thickness or 1, Transparency = 0 }, parent)
 end
 
 local function tween(obj, duration, props)
@@ -57,37 +46,19 @@ local function tween(obj, duration, props)
 end
 
 local gui = create("ScreenGui", {
-    Name = "KEY_Lop94",
-    ResetOnSpawn = false,
-    IgnoreGuiInset = true,
-    ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
+    Name = "KEY_Lop94", ResetOnSpawn = false, IgnoreGuiInset = true, ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
 }, playerGui)
 
---// FLOATING OPEN BUTTON
 local openButton = create("TextButton", {
-    Name = "OpenButton",
-    Size = UDim2.fromOffset(58, 58),
-    Position = UDim2.new(0, 18, 0.5, -29),
-    BackgroundColor3 = C.Background,
-    Text = "K",
-    TextColor3 = C.Red,
-    TextSize = 27,
-    Font = Enum.Font.GothamBlack,
-    AutoButtonColor = false,
+    Name = "OpenButton", Size = UDim2.fromOffset(58, 58), Position = UDim2.new(0, 18, 0.5, -29),
+    BackgroundColor3 = C.Background, Text = "K", TextColor3 = C.Red, TextSize = 27, Font = Enum.Font.GothamBlack, AutoButtonColor = false,
 }, gui)
 round(openButton, 18)
 stroke(openButton, C.Red, 2)
 
---// MAIN WINDOW
 local main = create("Frame", {
-    Name = "Main",
-    AnchorPoint = Vector2.new(0.5, 0.5),
-    Position = UDim2.new(0.5, 0, 0.5, 0),
-    Size = UDim2.fromOffset(650, 420),
-    BackgroundColor3 = C.Background,
-    BorderSizePixel = 0,
-    Visible = false,
-    ClipsDescendants = true,
+    Name = "Main", AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.new(0.5, 0, 0.5, 0),
+    Size = UDim2.fromOffset(650, 420), BackgroundColor3 = C.Background, BorderSizePixel = 0, Visible = false, ClipsDescendants = true,
 }, gui)
 round(main, 16)
 stroke(main, C.Red, 1.5)
@@ -103,96 +74,37 @@ updateScale()
 if workspace.CurrentCamera then
     workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(updateScale)
 end
---[[
-    KIÊN | LỚP 94 — THCS NHUẬN PHÚ TÂN
-    BLACK NEBULA — Part 2: Navigation, TopBar & Fly GUI V3
-]]
+local top = create("Frame", { Size = UDim2.new(1, 0, 0, 64), BackgroundColor3 = C.Panel, BorderSizePixel = 0 }, main)
+create("Frame", { Position = UDim2.new(0, 0, 1, -2), Size = UDim2.new(1, 0, 0, 2), BackgroundColor3 = C.Red, BorderSizePixel = 0 }, top)
 
---// TOP BAR
-local top = create("Frame", {
-    Size = UDim2.new(1, 0, 0, 64),
-    BackgroundColor3 = C.Panel,
-    BorderSizePixel = 0,
-}, main)
-
-create("Frame", {
-    Position = UDim2.new(0, 0, 1, -2),
-    Size = UDim2.new(1, 0, 0, 2),
-    BackgroundColor3 = C.Red,
-    BorderSizePixel = 0,
-}, top)
-
-local logo = create("Frame", {
-    Position = UDim2.new(0, 17, 0.5, -19),
-    Size = UDim2.fromOffset(38, 38),
-    BackgroundColor3 = C.RedDark,
-}, top)
+local logo = create("Frame", { Position = UDim2.new(0, 17, 0.5, -19), Size = UDim2.fromOffset(38, 38), BackgroundColor3 = C.RedDark }, top)
 round(logo, 12)
 stroke(logo, C.Red, 1)
 
-create("TextLabel", {
-    Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1,
-    Text = "K", TextColor3 = C.White, Font = Enum.Font.GothamBlack, TextSize = 23,
-}, logo)
+create("TextLabel", { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Text = "K", TextColor3 = C.White, Font = Enum.Font.GothamBlack, TextSize = 23 }, logo)
+create("TextLabel", { Position = UDim2.new(0, 65, 0, 12), Size = UDim2.new(0, 360, 0, 25), BackgroundTransparency = 1, Text = "KIÊN | LỚP 94 HUB", TextColor3 = C.White, TextXAlignment = Enum.TextXAlignment.Left, Font = Enum.Font.GothamBlack, TextSize = 15 }, top)
+create("TextLabel", { Position = UDim2.new(0, 66, 0, 36), Size = UDim2.new(0, 300, 0, 17), BackgroundTransparency = 1, Text = "CUSTOM SCRIPT INTERFACE", TextColor3 = C.Muted, TextXAlignment = Enum.TextXAlignment.Left, Font = Enum.Font.GothamMedium, TextSize = 9 }, top)
 
-create("TextLabel", {
-    Position = UDim2.new(0, 65, 0, 9), Size = UDim2.new(0, 360, 0, 25), BackgroundTransparency = 1,
-    Text = "KIÊN | LỚP 94 — THCS NHUẬN PHÚ TÂN", TextColor3 = C.White, TextXAlignment = Enum.TextXAlignment.Left,
-    Font = Enum.Font.GothamBlack, TextSize = 14,
-}, top)
-
-create("TextLabel", {
-    Position = UDim2.new(0, 66, 0, 35), Size = UDim2.new(0, 300, 0, 17), BackgroundTransparency = 1,
-    Text = "BLACK NEBULA  •  PRO MAX EDITION", TextColor3 = C.Muted, TextXAlignment = Enum.TextXAlignment.Left,
-    Font = Enum.Font.GothamMedium, TextSize = 9,
-}, top)
-
-local close = create("TextButton", {
-    Position = UDim2.new(1, -45, 0, 15), Size = UDim2.fromOffset(30, 30),
-    BackgroundColor3 = C.Card, Text = "×", TextColor3 = C.Red, TextSize = 23,
-    Font = Enum.Font.GothamBold, AutoButtonColor = false,
-}, top)
+local close = create("TextButton", { Position = UDim2.new(1, -45, 0, 15), Size = UDim2.fromOffset(30, 30), BackgroundColor3 = C.Card, Text = "×", TextColor3 = C.Red, TextSize = 23, Font = Enum.Font.GothamBold, AutoButtonColor = false }, top)
 round(close, 9)
 
---// SIDEBAR & CONTENT
-local sidebar = create("Frame", {
-    Position = UDim2.new(0, 0, 0, 66), Size = UDim2.new(0, 155, 1, -66),
-    BackgroundColor3 = C.Panel, BorderSizePixel = 0,
-}, main)
-
+local sidebar = create("Frame", { Position = UDim2.new(0, 0, 0, 66), Size = UDim2.new(0, 155, 1, -66), BackgroundColor3 = C.Panel, BorderSizePixel = 0 }, main)
 create("UIListLayout", { Padding = UDim.new(0, 7), SortOrder = Enum.SortOrder.LayoutOrder }, sidebar)
 create("UIPadding", { PaddingTop = UDim.new(0, 17), PaddingLeft = UDim.new(0, 12), PaddingRight = UDim.new(0, 12) }, sidebar)
 
-local content = create("Frame", {
-    Position = UDim2.new(0, 155, 0, 66), Size = UDim2.new(1, -155, 1, -66),
-    BackgroundTransparency = 1,
-}, main)
-
-local pageTitle = create("TextLabel", {
-    Position = UDim2.new(0, 20, 0, 15), Size = UDim2.new(1, -40, 0, 30), BackgroundTransparency = 1,
-    Text = "HOME / OVERVIEW", TextColor3 = C.White, TextXAlignment = Enum.TextXAlignment.Left,
-    Font = Enum.Font.GothamBold, TextSize = 17,
-}, content)
-
-local pageHint = create("TextLabel", {
-    Position = UDim2.new(0, 20, 0, 44), Size = UDim2.new(1, -40, 0, 20), BackgroundTransparency = 1,
-    Text = "Hệ thống script tích hợp các tính năng nâng cao.", TextColor3 = C.Muted, TextXAlignment = Enum.TextXAlignment.Left,
-    Font = Enum.Font.Gotham, TextSize = 11,
-}, content)
+local content = create("Frame", { Position = UDim2.new(0, 155, 0, 66), Size = UDim2.new(1, -155, 1, -66), BackgroundTransparency = 1 }, main)
+local pageTitle = create("TextLabel", { Position = UDim2.new(0, 20, 0, 15), Size = UDim2.new(1, -40, 0, 30), BackgroundTransparency = 1, Text = "HOME / OVERVIEW", TextColor3 = C.White, TextXAlignment = Enum.TextXAlignment.Left, Font = Enum.Font.GothamBold, TextSize = 17 }, content)
+local pageHint = create("TextLabel", { Position = UDim2.new(0, 20, 0, 44), Size = UDim2.new(1, -40, 0, 20), BackgroundTransparency = 1, Text = "Hệ thống script tích hợp toàn diện.", TextColor3 = C.Muted, TextXAlignment = Enum.TextXAlignment.Left, Font = Enum.Font.Gotham, TextSize = 11 }, content)
 
 local pageBody = create("ScrollingFrame", {
-    Position = UDim2.new(0, 15, 0, 75), Size = UDim2.new(1, -30, 1, -88),
-    BackgroundTransparency = 1, BorderSizePixel = 0, ScrollBarThickness = 3,
-    ScrollBarImageColor3 = C.Red, CanvasSize = UDim2.new(0, 0, 0, 0), AutomaticCanvasSize = Enum.AutomaticSize.Y,
+    Position = UDim2.new(0, 15, 0, 75), Size = UDim2.new(1, -30, 1, -88), BackgroundTransparency = 1, BorderSizePixel = 0,
+    ScrollBarThickness = 3, ScrollBarImageColor3 = C.Red, CanvasSize = UDim2.new(0, 0, 0, 0), AutomaticCanvasSize = Enum.AutomaticSize.Y,
 }, content)
-
 local bodyLayout = create("UIListLayout", { Padding = UDim.new(0, 10), SortOrder = Enum.SortOrder.LayoutOrder }, pageBody)
 
---// TOAST NOTIFICATION
 local toast = create("TextLabel", {
-    AnchorPoint = Vector2.new(0.5, 1), Position = UDim2.new(0.5, 0, 1, -12),
-    Size = UDim2.fromOffset(300, 38), BackgroundColor3 = C.Card, TextColor3 = C.White,
-    Text = "", TextSize = 12, Font = Enum.Font.GothamMedium, Visible = false, ZIndex = 10,
+    AnchorPoint = Vector2.new(0.5, 1), Position = UDim2.new(0.5, 0, 1, -12), Size = UDim2.fromOffset(300, 38),
+    BackgroundColor3 = C.Card, TextColor3 = C.White, Text = "", TextSize = 12, Font = Enum.Font.GothamMedium, Visible = false, ZIndex = 10,
 }, main)
 round(toast, 10)
 stroke(toast, C.Red, 1)
@@ -214,41 +126,15 @@ local function notify(message)
     end)
 end
 
---// FLY GUI V3 (EXTERNAL MENU)
-local flyGui = create("ScreenGui", {
-    Name = "KienFlyGUIV3", ResetOnSpawn = false, IgnoreGuiInset = true, Enabled = false,
-}, playerGui)
-
-local flyFrame = create("Frame", {
-    Name = "FlyControl", Size = UDim2.fromOffset(180, 110),
-    Position = UDim2.new(0.8, 0, 0.3, 0), BackgroundColor3 = C.Background,
-    Active = true, Draggable = true,
-}, flyGui)
+local flyGui = create("ScreenGui", { Name = "KienFlyGUIV3", ResetOnSpawn = false, IgnoreGuiInset = true, Enabled = false }, playerGui)
+local flyFrame = create("Frame", { Name = "FlyControl", Size = UDim2.fromOffset(180, 110), Position = UDim2.new(0.8, 0, 0.3, 0), BackgroundColor3 = C.Background, Active = true, Draggable = true }, flyGui)
 round(flyFrame, 12)
 stroke(flyFrame, C.Red, 1.5)
 
-create("TextLabel", {
-    Size = UDim2.new(1, 0, 0, 30), BackgroundColor3 = C.Panel,
-    Text = "FLY GUI V3", TextColor3 = C.White, Font = Enum.Font.GothamBold, TextSize = 12,
-}, flyFrame)
-
-local flyStatus = create("TextLabel", {
-    Position = UDim2.new(0, 10, 0, 38), Size = UDim2.new(1, -20, 0, 25),
-    BackgroundTransparency = 1, Text = "Trạng thái: Đang tắt", TextColor3 = C.Muted,
-    Font = Enum.Font.Gotham, TextSize = 11, TextXAlignment = Enum.TextXAlignment.Left,
-}, flyFrame)
-
-local flyToggleBtn = create("TextButton", {
-    Position = UDim2.new(0, 10, 0, 70), Size = UDim2.new(1, -20, 0, 30),
-    BackgroundColor3 = C.RedDark, Text = "BẬT / TẮT BAY", TextColor3 = C.White,
-    Font = Enum.Font.GothamBold, TextSize = 11, AutoButtonColor = false,
-}, flyFrame)
+create("TextLabel", { Size = UDim2.new(1, 0, 0, 30), BackgroundColor3 = C.Panel, Text = "FLY GUI V3", TextColor3 = C.White, Font = Enum.Font.GothamBold, TextSize = 12 }, flyFrame)
+local flyStatus = create("TextLabel", { Position = UDim2.new(0, 10, 0, 38), Size = UDim2.new(1, -20, 0, 25), BackgroundTransparency = 1, Text = "Trạng thái: Đang tắt", TextColor3 = C.Muted, Font = Enum.Font.Gotham, TextSize = 11, TextXAlignment = Enum.TextXAlignment.Left }, flyFrame)
+local flyToggleBtn = create("TextButton", { Position = UDim2.new(0, 10, 0, 70), Size = UDim2.new(1, -20, 0, 30), BackgroundColor3 = C.RedDark, Text = "BẬT / TẮT BAY", TextColor3 = C.White, Font = Enum.Font.GothamBold, TextSize = 11, AutoButtonColor = false }, flyFrame)
 round(flyToggleBtn, 8)
---[[
-    KIÊN | LỚP 94 — THCS NHUẬN PHÚ TÂN
-    BLACK NEBULA — Part 3: Active Functions & Logic Execution
-]]
-
 local function getHumanoid()
     local char = player.Character
     if char then return char:FindFirstChildOfClass("Humanoid") end
@@ -261,7 +147,6 @@ local flySpeed = 50
 local flyConn = nil
 local noclipConn = nil
 
---// FLY V3 LOGIC
 local function toggleFly(state)
     flyActive = state
     flyGui.Enabled = state
@@ -293,164 +178,49 @@ local function toggleFly(state)
     end
 end
 
-flyToggleBtn.Activated:Connect(function()
-    toggleFly(not flyActive)
-end)
+flyToggleBtn.Activated:Connect(function() toggleFly(not flyActive) end)
 
---// PAGES & FEATURES CONFIG
 local pages = {
     HOME = {
         title = "HOME / TỔNG QUAN",
-        hint = "Chào mừng Kiên đến với Hub độc quyền",
+        hint = "Bảng điều khiển chính của bạn",
         items = {
-            {kind = "banner", title = "KIÊN LỚP 94 - THCS NHUẬN PHÚ TÂN", desc = "Đã cập nhật giao diện Fly GUI V3 và tính năng 2 Base."},
-            {kind = "info", title = "TRƯỜNG", desc = "THCS Nhuận Phú Tân • Vĩnh Long"},
+            {kind = "banner", title = "KIÊN HUB PRO MAX", desc = "Đã cập nhật giao diện Fly GUI V3 và tính năng 2 Base."},
+            {kind = "info", title = "TRẠNG THÁI", desc = "Đang chạy mượt mà trên hệ thống."},
         },
     },
     PLAYER = {
         title = "PLAYER / NHÂN VẬT",
         hint = "Tùy chỉnh tốc độ và nhảy cao",
         items = {
-            {
-                kind = "toggle", title = "Tăng Tốc Độ Chạy (Speed 35)", 
-                desc = "Giúp nhân vật di chuyển nhanh hơn.", default = false,
-                callback = function(enabled)
-                    local hum = getHumanoid()
-                    if hum then hum.WalkSpeed = enabled and 35 or 16 end
-                end
-            },
-            {
-                kind = "toggle", title = "Nhảy Siêu Cao (Super Jump)", 
-                desc = "Tăng lực nhảy lên 100.", default = false,
-                callback = function(enabled)
-                    local hum = getHumanoid()
-                    if hum then hum.JumpPower = enabled and 100 or 50 end
-                end
-            },
+            {kind = "toggle", title = "Tăng Tốc Độ Chạy (Speed 35)", desc = "Di chuyển nhanh hơn.", default = false, callback = function(enabled) local h = getHumanoid() if h then h.WalkSpeed = enabled and 35 or 16 end end},
+            {kind = "toggle", title = "Nhảy Siêu Cao (Super Jump)", desc = "Tăng lực nhảy lên 100.", default = false, callback = function(enabled) local h = getHumanoid() if h then h.JumpPower = enabled and 100 or 50 end end},
         },
     },
     MOVEMENT = {
         title = "MOVEMENT / BAY & DI CHUYỂN",
         hint = "Quản lý Fly V3 và Noclip",
         items = {
-            {
-                kind = "toggle", title = "Bật Menu Fly GUI V3 Ngoài Màn Hình", 
-                desc = "Hiển thị bảng điều khiển bay độc lập.", default = false,
-                callback = function(enabled)
-                    toggleFly(enabled)
-                end
-            },
-            {
-                kind = "toggle", title = "Đi Xuyên Tường (Noclip)", 
-                desc = "Xuyên qua mọi vật cản.", default = false,
-                callback = function(enabled)
-                    if enabled then
-                        noclipConn = RunService.Stepped:Connect(function()
-                            local char = player.Character
-                            if char then
-                                for _, part in ipairs(char:GetDescendants()) do
-                                    if part:IsA("BasePart") then part.CanCollide = false end
-                                end
-                            end
-                        end)
-                    else
-                        if noclipConn then noclipConn:Disconnect() end
-                    end
-                end
-            },
+            {kind = "toggle", title = "Bật Menu Fly GUI V3 Ngoài Màn Hình", desc = "Hiển thị bảng điều khiển bay độc lập.", default = false, callback = function(enabled) toggleFly(enabled) end},
+            {kind = "toggle", title = "Đi Xuyên Tường (Noclip)", desc = "Xuyên qua mọi vật cản.", default = false, callback = function(enabled) if enabled then noclipConn = RunService.Stepped:Connect(function() local c = player.Character if c then for _, p in ipairs(c:GetDescendants()) do if p:IsA("BasePart") then p.CanCollide = false end end end end) else if noclipConn then noclipConn:Disconnect() end end end},
         },
     },
     BASE = {
         title = "BASES / LƯU & BAY VỀ CĂN CỨ",
         hint = "Hỗ trợ 2 vị trí lưu base và tốc độ đến 165",
         items = {
-            {
-                kind = "button", title = "Lưu Vị Trí Căn Cứ 1 (Save Base 1)", 
-                desc = "Ghi nhớ tọa độ hiện tại vào Base 1.",
-                callback = function()
-                    local char = player.Character
-                    if char and char:FindFirstChild("HumanoidRootPart") then
-                        savedBases[1] = char.HumanoidRootPart.CFrame
-                        notify("Đã lưu Căn cứ 1 thành công!")
-                    end
-                end
-            },
-            {
-                kind = "button", title = "Lưu Vị Trí Căn Cứ 2 (Save Base 2)", 
-                desc = "Ghi nhớ tọa độ hiện tại vào Base 2.",
-                callback = function()
-                    local char = player.Character
-                    if char and char:FindFirstChild("HumanoidRootPart") then
-                        savedBases[2] = char.HumanoidRootPart.CFrame
-                        notify("Đã lưu Căn cứ 2 thành công!")
-                    end
-                end
-            },
-            {
-                kind = "button", title = "Bay Về Căn Cứ 1 (Teleport Base 1)", 
-                desc = "Dịch chuyển tức thì tới Base 1 (Tốc độ tối đa 165).",
-                callback = function()
-                    local char = player.Character
-                    if char and char:FindFirstChild("HumanoidRootPart") and savedBases[1] then
-                        char.HumanoidRootPart.CFrame = savedBases[1]
-                        notify("Đã bay về Căn cứ 1!")
-                    else
-                        notify("Chưa lưu tọa độ Căn cứ 1!")
-                    end
-                end
-            },
-            {
-                kind = "button", title = "Chạy Giả Lập Về Base 1 (Simulated Run)", 
-                desc = "Tự động kéo nút chạy về Base 1 theo hướng mượt mà.",
-                callback = function()
-                    local char = player.Character
-                    local hum = getHumanoid()
-                    if char and char:FindFirstChild("HumanoidRootPart") and savedBases[1] and hum then
-                        notify("Đang chạy giả lập về Base 1...")
-                        hum:MoveTo(savedBases[1].Position)
-                    else
-                        notify("Chưa lưu tọa độ Căn cứ 1 hoặc mất nhân vật!")
-                    end
-                end
-            },
+            {kind = "button", title = "Lưu Vị Trí Căn Cứ 1", desc = "Ghi nhớ tọa độ hiện tại vào Base 1.", callback = function() local c = player.Character if c and c:FindFirstChild("HumanoidRootPart") then savedBases[1] = c.HumanoidRootPart.CFrame notify("Đã lưu Căn cứ 1!") end end},
+            {kind = "button", title = "Lưu Vị Trí Căn Cứ 2", desc = "Ghi nhớ tọa độ hiện tại vào Base 2.", callback = function() local c = player.Character if c and c:FindFirstChild("HumanoidRootPart") then savedBases[2] = c.HumanoidRootPart.CFrame notify("Đã lưu Căn cứ 2!") end end},
+            {kind = "button", title = "Bay Về Căn Cứ 1", desc = "Dịch chuyển tức thì tới Base 1.", callback = function() local c = player.Character if c and c:FindFirstChild("HumanoidRootPart") and savedBases[1] then c.HumanoidRootPart.CFrame = savedBases[1] notify("Đã bay về Căn cứ 1!") else notify("Chưa lưu Căn cứ 1!") end end},
+            {kind = "button", title = "Chạy Giả Lập Về Căn Cứ 1", desc = "Tự động chạy bộ về Base 1.", callback = function() local c = player.Character local h = getHumanoid() if c and c:FindFirstChild("HumanoidRootPart") and savedBases[1] and h then notify("Đang chạy giả lập về Base 1...") h:MoveTo(savedBases[1].Position) else notify("Chưa lưu Căn cứ 1!") end end},
         },
     },
     MISC = {
         title = "OPTIMIZE / FIX LAG & AUTO LOOT",
         hint = "Tối ưu hóa game mà không làm giảm độ sáng",
         items = {
-            {
-                kind = "button", title = "Fix Lag (Xóa Hiệu Ứng Nặng - Giữ Nguyên Sáng)", 
-                desc = "Xóa bỏ hiệu ứng particle gây lag nhưng không làm tối màn hình.",
-                callback = function()
-                    for _, obj in ipairs(workspace:GetDescendants()) do
-                        if obj:IsA("ParticleEmitter") or obj:IsA("Trail") or obj:IsA("Fire") or obj:IsA("Smoke") then
-                            obj:Destroy()
-                        end
-                    end
-                    notify("Đã dọn dẹp hiệu ứng gây lag, giữ nguyên độ sáng!")
-                end
-            },
-            {
-                kind = "toggle", title = "Nhặt Vật Phẩm Nhanh (Auto Loot Fast)", 
-                desc = "Bỏ qua vòng tròn chờ, nhặt lập tức.", default = false,
-                callback = function(enabled)
-                    _G.FastLoot = enabled
-                    task.spawn(function()
-                        while _G.FastLoot do
-                            task.wait(0.2)
-                            pcall(function()
-                                for _, obj in ipairs(workspace:GetDescendants()) do
-                                    if obj:IsA("ProximityPrompt") then
-                                        fireproximityprompt(obj)
-                                    end
-                                end
-                            end)
-                        end
-                    end)
-                    notify(enabled ? "Đã bật Auto Loot nhanh" : "Đã tắt Auto Loot nhanh")
-                end
-            },
+            {kind = "button", title = "Fix Lag (Giữ Nguyên Sáng)", desc = "Xóa hiệu ứng nặng gây lag, không làm tối màn hình.", callback = function() for _, o in ipairs(workspace:GetDescendants()) do if o:IsA("ParticleEmitter") or o:IsA("Trail") or o:IsA("Fire") or o:IsA("Smoke") then o:Destroy() end end notify("Đã dọn dẹp lag, giữ nguyên độ sáng!") end},
+            {kind = "toggle", title = "Nhặt Vật Phẩm Nhanh (Auto Loot Fast)", desc = "Bỏ qua vòng tròn chờ, nhặt lập tức.", default = false, callback = function(enabled) _G.FastLoot = enabled task.spawn(function() while _G.FastLoot do task.wait(0.2) pcall(function() for _, o in ipairs(workspace:GetDescendants()) do if o:IsA("ProximityPrompt") then fireproximityprompt(o) end end) end end) notify(enabled and "Đã bật Auto Loot nhanh" or "Đã tắt Auto Loot nhanh") end},
         },
     },
 }
@@ -468,17 +238,10 @@ end
 local function makeCard(titleText, descText, height)
     local card = create("Frame", { Size = UDim2.new(1, -4, 0, height or 68), BackgroundColor3 = C.Card, BorderSizePixel = 0 }, pageBody)
     round(card, 12)
-    stroke(card, C.RedDark, 1, 0.35)
+    stroke(card, C.RedDark, 1)
 
-    create("TextLabel", {
-        Position = UDim2.new(0, 14, 0, 11), Size = UDim2.new(1, -28, 0, 20), BackgroundTransparency = 1,
-        Text = titleText, TextColor3 = C.White, TextXAlignment = Enum.TextXAlignment.Left, Font = Enum.Font.GothamBold, TextSize = 12,
-    }, card)
-
-    create("TextLabel", {
-        Position = UDim2.new(0, 14, 0, 34), Size = UDim2.new(1, -28, 0, 22), BackgroundTransparency = 1,
-        Text = descText, TextColor3 = C.Muted, TextXAlignment = Enum.TextXAlignment.Left, Font = Enum.Font.Gotham, TextSize = 10, TextWrapped = true,
-    }, card)
+    create("TextLabel", { Position = UDim2.new(0, 14, 0, 11), Size = UDim2.new(1, -28, 0, 20), BackgroundTransparency = 1, Text = titleText, TextColor3 = C.White, TextXAlignment = Enum.TextXAlignment.Left, Font = Enum.Font.GothamBold, TextSize = 12 }, card)
+    create("TextLabel", { Position = UDim2.new(0, 14, 0, 34), Size = UDim2.new(1, -28, 0, 22), BackgroundTransparency = 1, Text = descText, TextColor3 = C.Muted, TextXAlignment = Enum.TextXAlignment.Left, Font = Enum.Font.Gotham, TextSize = 10, TextWrapped = true }, card)
     return card
 end
 
@@ -487,16 +250,10 @@ local function addToggle(item)
     local key = currentPage .. "_" .. item.title
     if states[key] == nil then states[key] = item.default or false end
 
-    local switch = create("TextButton", {
-        AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -13, 0.5, 0), Size = UDim2.fromOffset(42, 23),
-        BackgroundColor3 = states[key] and C.Red or Color3.fromRGB(55, 55, 66), Text = "", AutoButtonColor = false,
-    }, card)
+    local switch = create("TextButton", { AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -13, 0.5, 0), Size = UDim2.fromOffset(42, 23), BackgroundColor3 = states[key] and C.Red or Color3.fromRGB(55, 55, 66), Text = "", AutoButtonColor = false }, card)
     round(switch, 12)
 
-    local knob = create("Frame", {
-        Position = states[key] and UDim2.new(1, -20, 0.5, -8) or UDim2.new(0, 4, 0.5, -8),
-        Size = UDim2.fromOffset(16, 16), BackgroundColor3 = C.White, BorderSizePixel = 0,
-    }, switch)
+    local knob = create("Frame", { Position = states[key] and UDim2.new(1, -20, 0.5, -8) or UDim2.new(0, 4, 0.5, -8), Size = UDim2.fromOffset(16, 16), BackgroundColor3 = C.White, BorderSizePixel = 0 }, switch)
     round(knob, 8)
 
     switch.Activated:Connect(function()
@@ -505,7 +262,6 @@ local function addToggle(item)
         tween(switch, 0.18, { BackgroundColor3 = enabled and C.Red or Color3.fromRGB(55, 55, 66) })
         tween(knob, 0.18, { Position = enabled and UDim2.new(1, -20, 0.5, -8) or UDim2.new(0, 4, 0.5, -8) })
         notify(item.title .. (enabled and " : ĐÃ BẬT" or " : ĐÃ TẮT"))
-
         if item.callback then pcall(function() item.callback(enabled) end) end
     end)
 end
@@ -527,14 +283,9 @@ renderPage = function(name)
             create("Frame", { Position = UDim2.new(0, 14, 1, -5), Size = UDim2.new(0.45, 0, 0, 2), BackgroundColor3 = C.Red, BorderSizePixel = 0 }, card)
         elseif item.kind == "button" then
             local card = makeCard(item.title, item.desc, 76)
-            local action = create("TextButton", {
-                AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -12, 0.5, 0), Size = UDim2.fromOffset(90, 28),
-                BackgroundColor3 = C.RedDark, Text = "THỰC THI", TextColor3 = C.White, Font = Enum.Font.GothamBold, TextSize = 9, AutoButtonColor = false,
-            }, card)
+            local action = create("TextButton", { AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -12, 0.5, 0), Size = UDim2.fromOffset(90, 28), BackgroundColor3 = C.RedDark, Text = "THỰC THI", TextColor3 = C.White, Font = Enum.Font.GothamBold, TextSize = 9, AutoButtonColor = false }, card)
             round(action, 8)
-            action.Activated:Connect(function()
-                if item.callback then pcall(function() item.callback() end) end
-            end)
+            action.Activated:Connect(function() if item.callback then pcall(function() item.callback() end) end end)
         else
             makeCard(item.title, item.desc, 68)
         end
@@ -546,12 +297,7 @@ local navNames = {HOME = "Trang Chủ", PLAYER = "Nhân Vật", MOVEMENT = "Di C
 local navButtons = {}
 
 for index, name in ipairs(navItems) do
-    local button = create("TextButton", {
-        Name = name, LayoutOrder = index, Size = UDim2.new(1, 0, 0, 38),
-        BackgroundColor3 = name == "HOME" and C.RedDark or C.Panel, Text = "   " .. navNames[name],
-        TextColor3 = name == "HOME" and C.White or C.Muted, TextXAlignment = Enum.TextXAlignment.Left,
-        Font = Enum.Font.GothamBold, TextSize = 11, AutoButtonColor = false,
-    }, sidebar)
+    local button = create("TextButton", { Name = name, LayoutOrder = index, Size = UDim2.new(1, 0, 0, 38), BackgroundColor3 = name == "HOME" and C.RedDark or C.Panel, Text = "   " .. navNames[name], TextColor3 = name == "HOME" and C.White or C.Muted, TextXAlignment = Enum.TextXAlignment.Left, Font = Enum.Font.GothamBold, TextSize = 11, AutoButtonColor = false }, sidebar)
     round(button, 9)
     navButtons[name] = button
 
@@ -603,4 +349,5 @@ UserInputService.InputEnded:Connect(function(input)
 end)
 
 renderPage("HOME")
-notify("KIÊN | LỚP 94 — THCS NHUẬN PHÚ TÂN SẴN SÀNG!")
+notify("SCRIPT HUB — SẴN SÀNG HOẠT ĐỘNG!")
+    
