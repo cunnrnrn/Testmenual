@@ -1,6 +1,6 @@
 --[[
     KIÊN | LỚP 94 — THCS NHUẬN PHÚ TÂN
-    BLACK NEBULA — Part 1: Core & Window Setup
+    BLACK NEBULA — Part 1: Core Setup & Window
 ]]
 
 local Players = game:GetService("Players")
@@ -77,6 +77,11 @@ updateScale()
 if workspace.CurrentCamera then
     workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(updateScale)
 end
+--[[
+    KIÊN | LỚP 94 — THCS NHUẬN PHÚ TÂN
+    BLACK NEBULA — Part 2: TopBar, Sidebar & Fly GUI V3
+]]
+
 local top = create("Frame", { Size = UDim2.new(1, 0, 0, 64), BackgroundColor3 = C.Panel, BorderSizePixel = 0 }, main)
 create("Frame", { Position = UDim2.new(0, 0, 1, -2), Size = UDim2.new(1, 0, 0, 2), BackgroundColor3 = C.Red, BorderSizePixel = 0 }, top)
 
@@ -130,6 +135,11 @@ local flySpeedLbl = create("TextLabel", { Position = UDim2.new(0, 10, 0, 55), Si
 
 local flyToggleBtn = create("TextButton", { Position = UDim2.new(0, 10, 0, 82), Size = UDim2.new(1, -20, 0, 32), BackgroundColor3 = C.RedDark, Text = "BẬT / TẮT BAY", TextColor3 = C.White, Font = Enum.Font.GothamBold, TextSize = 11, AutoButtonColor = false }, flyFrame)
 round(flyToggleBtn, 8)
+--[[
+    KIÊN | LỚP 94 — THCS NHUẬN PHÚ TÂN
+    BLACK NEBULA — Part 3: Active Functions & Logic
+]]
+
 local function getHumanoid()
     local char = player.Character
     if char then return char:FindFirstChildOfClass("Humanoid") end
@@ -180,7 +190,7 @@ local pages = {
         title = "HOME / OVERVIEW",
         hint = "Welcome to KIÊN | LỚP 94",
         items = {
-            {kind = "banner", title = "BLACK NEBULA V3", desc = "Đã trang bị Fly GUI V3 ngoài màn hình và 2 Base thông minh."},
+            {kind = "banner", title = "BLACK NEBULA V3", desc = "Đã tích hợp Fly GUI V3, 2 Base và Fix Lag giữ sáng."},
             {kind = "info", title = "AN TOÀN", desc = "Có chế độ giả lập chạy bộ chống Anti-Cheat."},
         },
     },
