@@ -91,7 +91,7 @@ stroke(logo, C.Red, 1)
 
 create("TextLabel", { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Text = "K", TextColor3 = C.White, Font = Enum.Font.GothamBlack, TextSize = 23 }, logo)
 create("TextLabel", { Position = UDim2.new(0, 65, 0, 10), Size = UDim2.new(0, 320, 0, 25), BackgroundTransparency = 1, Text = "KIÊN | LỚP 94 — THCS NPT", TextColor3 = C.White, TextXAlignment = Enum.TextXAlignment.Left, Font = Enum.Font.GothamBlack, TextSize = 17 }, top)
-create("TextLabel", { Position = UDim2.new(0, 66, 0, 35), Size = UDim2.new(0, 260, 0, 17), BackgroundTransparency = 1, Text = "BLACK NEBULA  •  FLY V3 & ANTI-CHEAT EDITION", TextColor3 = C.Muted, TextXAlignment = Enum.TextXAlignment.Left, Font = Enum.Font.GothamMedium, TextSize = 9 }, top)
+create("TextLabel", { Position = UDim2.new(0, 66, 0, 35), Size = UDim2.new(0, 260, 0, 17), BackgroundTransparency = 1, Text = "BLACK NEBULA  •  POPOUT BUTTON EDITION", TextColor3 = C.Muted, TextXAlignment = Enum.TextXAlignment.Left, Font = Enum.Font.GothamMedium, TextSize = 9 }, top)
 
 local close = create("TextButton", { Position = UDim2.new(1, -45, 0, 15), Size = UDim2.fromOffset(30, 30), BackgroundColor3 = C.Card, Text = "×", TextColor3 = C.Red, TextSize = 23, Font = Enum.Font.GothamBold, AutoButtonColor = false }, top)
 round(close, 9)
@@ -137,7 +137,7 @@ local flyToggleBtn = create("TextButton", { Position = UDim2.new(0, 10, 0, 82), 
 round(flyToggleBtn, 8)
 --[[
     KIÊN | LỚP 94 — THCS NHUẬN PHÚ TÂN
-    BLACK NEBULA — Part 3: Active Functions & Logic
+    BLACK NEBULA — Part 3: Popout Floating Buttons & Active Logic
 ]]
 
 local function getHumanoid()
@@ -151,7 +151,104 @@ local flyActive = false
 local flySpeed = 50
 local flyConn = nil
 local noclipConn = nil
+local movingToBasePath = false
 
+-- ScreenGui riêng chứa các nút pop-out kéo ra ngoài màn hình
+local popoutGui = create("ScreenGui", { Name = "KienPopoutGui", ResetOnSpawn = false, IgnoreGuiInset = true }, playerGui)
+
+-- Hàm tạo nút ô vuông kéo ra ngoài màn hình cho từng chức năng
+local function createPopoutButton(name, title, initialActive, onToggle)
+    local btn = create("TextButton", {
+        Name = name .. "Popout", Size = UDim2.fromOffset(110, 38), Position = UDim2.new(0.2, math.random(0, 200), 0.1, math.random(0, 150)),
+        BackgroundColor3 = initialActive and C.Green or C.Background, Text = title, TextColor3 = C.White,
+        Font = Enum.Font.GothamBold, TextSize = 10, Active = true, Draggable = true, AutoButtonColor = false, Visible = false,
+    }, popoutGui)
+    round(btn, 8)
+    stroke(btn, C.Red, 1.5)
+
+    local activeState = initialActive
+    btn.MouseButton1Click:Connect(function()
+        activeState = not activeState
+        btn.BackgroundColor3 = activeState and C.Green or C.Background
+        if onToggle then onToggle(activeState) end
+        notify(title .. (activeState and " : BẬT" : " : TẮT"))
+    end)
+    return btn
+end
+
+-- Tạo các nút popout kéo ra ngoài cho các tính năng chính
+local speedPopout = createPopoutButton("Speed", "Tốc độ 35", false, function(state)
+    local h = getHumanoid() if h then h.WalkSpeed = state and 35 or 16 end
+end)
+local jumpPopout = createPopoutButton("Jump", "Nhảy Cao", false, function(state)
+    local h = getHumanoid() if h then h.JumpPower = state and 100 or 50 end
+end)
+local noclipPopout = createPopoutButton("Noclip", "Xuyên Tường", false, function(state)
+    if state then
+        noclipConn = RunService.Stepped:Connect(function()
+            local c = player.Character if c then for _, p in ipairs(c:GetDescendants()) do if p:IsA("BasePart") then p.CanCollide = false end end end
+        end)
+    else
+        if noclipConn then noclipConn:Disconnect() end
+    end
+end)
+local lootPopout = createPopoutButton("AutoLoot", "Auto Loot", false, function(state)
+    _G.FastLoot = state
+    task.spawn(function()
+        while _G.FastLoot do
+            task.wait(0.2)
+            pcall(function() for _, o in ipairs(workspace:GetDescendants()) do if o:IsA("ProximityPrompt") then fireproximityprompt(o) end end end)
+        end
+    end)
+end)
+
+-- Bay thật đến mục tiêu
+local function flyTowardTarget(targetPos, speed, onComplete)
+    local char = player.Character
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    local hum = getHumanoid()
+    if not root or not hum then return end
+
+    movingToBasePath = true
+    hum.PlatformStand = true
+    
+    local bv = Instance.new("BodyVelocity")
+    bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+    bv.Parent = root
+
+    local bg = Instance.new("BodyGyro")
+    bg.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+    bg.P = 3000
+    bg.Parent = root
+
+    local conn
+    conn = RunService.RenderStepped:Connect(function()
+        if not root or not movingToBasePath then
+            if conn then conn:Disconnect() end
+            if bv then bv:Destroy() end
+            if bg then bg:Destroy() end
+            return
+        end
+
+        local currentPos = root.Position
+        local direction = (targetPos - currentPos)
+        local distance = direction.Magnitude
+
+        if distance < 5 then
+            movingToBasePath = false
+            hum.PlatformStand = false
+            if conn then conn:Disconnect() end
+            if bv then bv:Destroy() end
+            if bg then bg:Destroy() end
+            if onComplete then onComplete() end
+        else
+            bv.Velocity = direction.Unit * speed
+            bg.CFrame = CFrame.new(currentPos, targetPos)
+        end
+    end)
+end
+
+-- Fly V3 Toggle
 local function toggleFly(state)
     flyActive = state
     flyGui.Enabled = state
@@ -185,49 +282,87 @@ end
 
 flyToggleBtn.MouseButton1Click:Connect(function() toggleFly(not flyActive) end)
 
+local selectedBase = 1
+local travelMode = "Bay Thật"
+
 local pages = {
     HOME = {
         title = "HOME / OVERVIEW",
         hint = "Welcome to KIÊN | LỚP 94",
         items = {
-            {kind = "banner", title = "BLACK NEBULA V3", desc = "Đã tích hợp Fly GUI V3, 2 Base và Fix Lag giữ sáng."},
-            {kind = "info", title = "AN TOÀN", desc = "Có chế độ giả lập chạy bộ chống Anti-Cheat."},
+            {kind = "banner", title = "BLACK NEBULA V3", desc = "Hỗ trợ nút ô vuông kéo ra ngoài màn hình và Fly thật."},
+            {kind = "info", title = "TIỆN ÍCH", desc = "Bấm nút ô vuông cạnh chức năng để đưa ra màn hình chính."},
         },
     },
     PLAYER = {
         title = "PLAYER / NHÂN VẬT",
         hint = "Tùy chỉnh tốc độ và nhảy cao",
         items = {
-            {kind = "toggle", title = "Tăng Tốc Độ Chạy (Speed 35)", desc = "Di chuyển nhanh hơn.", default = false, callback = function(enabled) local h = getHumanoid() if h then h.WalkSpeed = enabled and 35 or 16 end end},
-            {kind = "toggle", title = "Nhảy Siêu Cao (Super Jump)", desc = "Tăng lực nhảy lên 100.", default = false, callback = function(enabled) local h = getHumanoid() if h then h.JumpPower = enabled and 100 or 50 end end},
+            {kind = "toggle", title = "Tăng Tốc Độ Chạy (Speed 35)", desc = "Di chuyển nhanh hơn.", default = false, popout = speedPopout, callback = function(enabled) local h = getHumanoid() if h then h.WalkSpeed = enabled and 35 or 16 end end},
+            {kind = "toggle", title = "Nhảy Siêu Cao (Super Jump)", desc = "Tăng lực nhảy lên 100.", default = false, popout = jumpPopout, callback = function(enabled) local h = getHumanoid() if h then h.JumpPower = enabled and 100 or 50 end end},
         },
     },
     MOVEMENT = {
         title = "MOVEMENT / FLY V3 & NOCLIP",
-        hint = "Bật menu Fly nổi và điều chỉnh tốc độ bay",
+        hint = "Điều chỉnh tốc độ bay lên tới 165",
         items = {
             {kind = "toggle", title = "Bật Menu Fly GUI V3 Nổi", desc = "Hiển thị bảng điều khiển bay độc lập ngoài màn hình.", default = false, callback = function(enabled) toggleFly(enabled) end},
             {kind = "button", title = "Tăng Tốc Bay (+25 [Max 165])", desc = "Tăng tốc độ Fly V3 (Hiện tại: 50)", callback = function() flySpeed = math.min(flySpeed + 25, 165) flySpeedLbl.Text = "Tốc độ: " .. flySpeed .. " / 165" notify("Đã tăng tốc bay lên: " .. flySpeed) end},
             {kind = "button", title = "Giảm Tốc Bay (-25 [Min 25])", desc = "Giảm tốc độ Fly V3.", callback = function() flySpeed = math.max(flySpeed - 25, 25) flySpeedLbl.Text = "Tốc độ: " .. flySpeed .. " / 165" notify("Đã giảm tốc bay xuống: " .. flySpeed) end},
-            {kind = "toggle", title = "Đi Xuyên Tường (Noclip)", desc = "Xuyên qua mọi vật cản trong game.", default = false, callback = function(enabled) if enabled then noclipConn = RunService.Stepped:Connect(function() local c = player.Character if c then for _, p in ipairs(c:GetDescendants()) do if p:IsA("BasePart") then p.CanCollide = false end end end end) else if noclipConn then noclipConn:Disconnect() end end end},
+            {kind = "toggle", title = "Đi Xuyên Tường (Noclip)", desc = "Xuyên qua mọi vật cản trong game.", default = false, popout = noclipPopout, callback = function(enabled) if enabled then noclipConn = RunService.Stepped:Connect(function() local c = player.Character if c then for _, p in ipairs(c:GetDescendants()) do if p:IsA("BasePart") then p.CanCollide = false end end end end) else if noclipConn then noclipConn:Disconnect() end end end},
         },
     },
     BASE = {
-        title = "BASES / LƯU & DI CHUYỂN 2 VỊ TRÍ",
-        hint = "Hỗ trợ 2 Base và chế độ giả lập chạy chống ban",
+        title = "BASES / LƯU & BAY VỀ CĂN CỨ",
+        hint = "Bấm nút ^ để mở lựa chọn Base và cách di chuyển",
         items = {
             {kind = "button", title = "Lưu Vị Trí Căn Cứ 1", desc = "Ghi nhớ tọa độ hiện tại vào Base 1.", callback = function() local c = player.Character if c and c:FindFirstChild("HumanoidRootPart") then savedBases[1] = c.HumanoidRootPart.CFrame notify("Đã lưu Căn cứ 1 thành công!") end end},
             {kind = "button", title = "Lưu Vị Trí Căn Cứ 2", desc = "Ghi nhớ tọa độ hiện tại vào Base 2.", callback = function() local c = player.Character if c and c:FindFirstChild("HumanoidRootPart") then savedBases[2] = c.HumanoidRootPart.CFrame notify("Đã lưu Căn cứ 2 thành công!") end end},
-            {kind = "button", title = "Bay Về Căn Cứ 1 (Teleport)", desc = "Dịch chuyển tức thì đến Base 1.", callback = function() local c = player.Character if c and c:FindFirstChild("HumanoidRootPart") and savedBases[1] then c.HumanoidRootPart.CFrame = savedBases[1] notify("Đã bay về Căn cứ 1!") else notify("Chưa lưu Căn cứ 1!") end end},
-            {kind = "button", title = "Bay Về Căn Cứ 2 (Teleport)", desc = "Dịch chuyển tức thì đến Base 2.", callback = function() local c = player.Character if c and c:FindFirstChild("HumanoidRootPart") and savedBases[2] then c.HumanoidRootPart.CFrame = savedBases[2] notify("Đã bay về Căn cứ 2!") else notify("Chưa lưu Căn cứ 2!") end end},
-            {kind = "button", title = "Chạy Giả Lập Về Căn Cứ 1 (Chống Ban)", desc = "Tự động kéo nút di chuyển chạy bộ về Base 1 theo tốc độ gốc.", callback = function() local c = player.Character local h = getHumanoid() if c and c:FindFirstChild("HumanoidRootPart") and savedBases[1] and h then notify("Đang chạy giả lập về Base 1 (Chống quét)...") h:MoveTo(savedBases[1].Position) else notify("Chưa lưu Căn cứ 1 hoặc mất nhân vật!") end end},
+            {
+                kind = "dropdown", title = "Lựa Chọn Căn Cứ & Kiểu Về (^ Selector)", 
+                desc = "Đang chọn: Base " .. selectedBase .. " | Chế độ: " .. travelMode,
+                options = {"Đổi Base (Đang: 1)", "Đổi Base (Đang: 2)", "Chế độ: Bay Thật (Max 165)", "Chế độ: Giả Lập Chạy Bộ"},
+                callback = function(choice)
+                    if choice:find("Đổi Base (Đang: 1)") or choice:find("Đổi Base (Đang: 2)") then
+                        selectedBase = (selectedBase == 1) and 2 or 1
+                        notify("Đã chuyển sang chọn: Căn cứ " .. selectedBase)
+                    elseif choice:find("Bay Thật") then
+                        travelMode = "Bay Thật"
+                        notify("Đã chọn chế độ: Bay thật đến base")
+                    elseif choice:find("Giả Lập Chạy") then
+                        travelMode = "Giả Lập Chạy"
+                        notify("Đã chọn chế độ: Chạy giả lập chống ban")
+                    end
+                end
+            },
+            {
+                kind = "button", title = "Di Chuyển Về Base Đã Chọn", 
+                desc = "Thực hiện bay thật hoặc chạy bộ về Base " .. selectedBase,
+                callback = function()
+                    local c = player.Character
+                    local h = getHumanoid()
+                    local target = savedBases[selectedBase]
+                    if c and c:FindFirstChild("HumanoidRootPart") and target and h then
+                        if travelMode == "Bay Thật" then
+                            notify("Đang bay thật về Căn cứ " .. selectedBase .. " (Tốc độ: " .. flySpeed .. ")")
+                            flyTowardTarget(target.Position, flySpeed, function() notify("Đã đến Căn cứ " .. selectedBase .. "!") end)
+                        else
+                            notify("Đang chạy giả lập kéo nút về Căn cứ " .. selectedBase .. "...")
+                            h:MoveTo(target.Position)
+                        end
+                    else
+                        notify("Chưa lưu tọa độ Căn cứ " .. selectedBase .. " hoặc mất nhân vật!")
+                    end
+                end
+            },
         },
     },
     MISC = {
-        title = "OPTIMIZE / FIX LAG SẠCH SẼ",
-        hint = "Xóa hiệu ứng nặng gây lag nhưng giữ nguyên độ sáng",
+        title = "OPTIMIZE / FIX LAG & AUTO LOOT",
+        hint = "Tối ưu hóa game và nhặt đồ nhanh",
         items = {
-            {kind = "button", title = "Fix Lag Sạch Sẽ (Giữ Nguyên Sáng)", desc = "Dọn sạch particle, trail, khói lửa gây lag, không làm tối màn hình.", callback = function() local count = 0 for _, o in ipairs(workspace:GetDescendants()) do if o:IsA("ParticleEmitter") or o:IsA("Trail") or o:IsA("Fire") or o:IsA("Smoke") or o:IsA("Explosion") then o:Destroy() count += 1 end end Lighting.GlobalShadows = false Lighting.Brightness = 2 notify("Đã fix lag sạch sẽ (" .. count .. " hiệu ứng), giữ nguyên độ sáng!") end},
+            {kind = "button", title = "Fix Lag Sạch Sẽ (Giữ Nguyên Sáng)", desc = "Xóa hiệu ứng nặng gây lag, không làm tối màn hình.", callback = function() local count = 0 for _, o in ipairs(workspace:GetDescendants()) do if o:IsA("ParticleEmitter") or o:IsA("Trail") or o:IsA("Fire") or o:IsA("Smoke") or o:IsA("Explosion") then o:Destroy() count += 1 end end Lighting.GlobalShadows = false Lighting.Brightness = 2 notify("Đã fix lag sạch sẽ (" .. count .. " hiệu ứng), giữ nguyên độ sáng!") end},
+            {kind = "toggle", title = "Nhặt Vật Phẩm Nhanh (Auto Loot Fast)", desc = "Bỏ qua vòng tròn chờ, nhặt lập tức.", default = false, popout = lootPopout, callback = function(enabled) _G.FastLoot = enabled task.spawn(function() while _G.FastLoot do task.wait(0.2) pcall(function() for _, o in ipairs(workspace:GetDescendants()) do if o:IsA("ProximityPrompt") then fireproximityprompt(o) end end) end end) notify(enabled and "Đã bật Auto Loot nhanh" or "Đã tắt Auto Loot nhanh") end},
         },
     },
 }
@@ -257,6 +392,17 @@ local function addToggle(item)
     local key = currentPage .. "_" .. item.title
     if states[key] == nil then states[key] = item.default or false end
 
+    -- Nút ô vuông popout kéo ra ngoài
+    if item.popout then
+        local popBtn = create("TextButton", { AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -60, 0.5, 0), Size = UDim2.fromOffset(24, 24), BackgroundColor3 = C.Panel, Text = "□", TextColor3 = C.White, Font = Enum.Font.GothamBold, TextSize = 12, AutoButtonColor = false }, card)
+        round(popBtn, 6)
+        stroke(popBtn, C.Red, 1)
+        popBtn.MouseButton1Click:Connect(function()
+            item.popout.Visible = not item.popout.Visible
+            notify(item.title .. (item.popout.Visible and " : Đã kéo ra ngoài" or " : Đã ẩn nút ngoài"))
+        end)
+    end
+
     local switch = create("TextButton", { AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -13, 0.5, 0), Size = UDim2.fromOffset(42, 23), BackgroundColor3 = states[key] and C.Red or Color3.fromRGB(55, 55, 66), Text = "", AutoButtonColor = false }, card)
     round(switch, 12)
 
@@ -268,6 +414,7 @@ local function addToggle(item)
         local enabled = states[key]
         switch.BackgroundColor3 = enabled and C.Red or Color3.fromRGB(55, 55, 66)
         knob.Position = enabled and UDim2.new(1, -20, 0.5, -8) or UDim2.new(0, 4, 0.5, -8)
+        if item.popout then item.popout.BackgroundColor3 = enabled and C.Green or C.Background end
         notify(item.title .. (enabled and " : ON" or " : OFF"))
         if item.callback then pcall(function() item.callback(enabled) end) end
     end)
@@ -293,6 +440,27 @@ renderPage = function(name)
             local action = create("TextButton", { AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -12, 0.5, 0), Size = UDim2.fromOffset(80, 28), BackgroundColor3 = C.RedDark, Text = "EXECUTE", TextColor3 = C.White, Font = Enum.Font.GothamBold, TextSize = 9, AutoButtonColor = false }, card)
             round(action, 8)
             action.MouseButton1Click:Connect(function() if item.callback then pcall(function() item.callback() end) end end)
+        elseif item.kind == "dropdown" then
+            local card = makeCard(item.title, item.desc, 76)
+            local dropBtn = create("TextButton", { AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -12, 0.5, 0), Size = UDim2.fromOffset(45, 28), BackgroundColor3 = C.RedDark, Text = "^", TextColor3 = C.White, Font = Enum.Font.GothamBold, TextSize = 14, AutoButtonColor = false }, card)
+            round(dropBtn, 8)
+
+            local dropdownList = create("Frame", { Position = UDim2.new(0, 0, 1, 5), Size = UDim2.new(1, 0, 0, #item.options * 28), BackgroundColor3 = C.Panel, Visible = false, ZIndex = 20 }, card)
+            round(dropdownList, 8)
+            stroke(dropdownList, C.Red, 1)
+            create("UIListLayout", { SortOrder = Enum.SortOrder.LayoutOrder }, dropdownList)
+
+            for _, optText in ipairs(item.options) do
+                local optBtn = create("TextButton", { Size = UDim2.new(1, 0, 0, 28), BackgroundTransparency = 1, Text = "  " .. optText, TextColor3 = C.White, TextXAlignment = Enum.TextXAlignment.Left, Font = Enum.Font.Gotham, TextSize = 10, ZIndex = 21 }, dropdownList)
+                optBtn.MouseButton1Click:Connect(function()
+                    dropdownList.Visible = false
+                    if item.callback then item.callback(optText) end
+                end)
+            end
+
+            dropBtn.MouseButton1Click:Connect(function()
+                dropdownList.Visible = not dropdownList.Visible
+            end)
         else
             makeCard(item.title, item.desc, 68)
         end
@@ -324,3 +492,4 @@ close.MouseButton1Click:Connect(function() main.Visible = false end)
 
 renderPage("HOME")
 notify("KIÊN | LỚP 94 — SẴN SÀNG!")
+    
