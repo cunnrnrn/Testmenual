@@ -1,1067 +1,585 @@
--- KING LOP 94 - PHANTOM OVERDRIVE | TRAN 3
--- PHAN 1/2 - CORE UI
--- Dat trong StarterPlayer > StarterPlayerScripts
+--[[
+    KIÊN | LỚP 94 — THCS NHUẬN PHÚ TÂN
+    BLACK NEBULA — Part 1: Core & UI Setup
+]]
 
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
+local TeleportService = game:GetService("TeleportService")
 local RunService = game:GetService("RunService")
-local Lighting = game:GetService("Lighting")
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
-local oldGui = playerGui:FindFirstChild("PhantomOverdriveUI")
-if oldGui then
-    oldGui:Destroy()
-end
+local old = playerGui:FindFirstChild("KEY_Lop94")
+if old then old:Destroy() end
 
-local COLORS = {
-    Background = Color3.fromRGB(10, 12, 20),
-    Panel = Color3.fromRGB(17, 20, 32),
-    Surface = Color3.fromRGB(24, 28, 43),
-    SurfaceHover = Color3.fromRGB(34, 39, 58),
-    Purple = Color3.fromRGB(155, 92, 255),
-    Cyan = Color3.fromRGB(50, 225, 255),
-    White = Color3.fromRGB(240, 243, 255),
-    Muted = Color3.fromRGB(139, 148, 174),
-    Green = Color3.fromRGB(75, 235, 160),
-    Red = Color3.fromRGB(255, 91, 116),
-    Border = Color3.fromRGB(53, 58, 82)
+--// COLORS
+local C = {
+    Background = Color3.fromRGB(10, 10, 14),
+    Panel = Color3.fromRGB(17, 17, 23),
+    Card = Color3.fromRGB(24, 24, 32),
+    Red = Color3.fromRGB(255, 48, 75),
+    RedDark = Color3.fromRGB(120, 20, 40),
+    White = Color3.fromRGB(245, 245, 250),
+    Muted = Color3.fromRGB(145, 145, 160),
+    Green = Color3.fromRGB(70, 230, 155),
 }
 
-local settings = {
-    Notifications = true,
-    NeonEffects = true,
-    ShowClock = true,
-    CompactMode = false,
-    DemoToggle = false,
-    Intensity = 50,
-    UITransparency = 0
-}
-
-local gui = Instance.new("ScreenGui")
-gui.Name = "PhantomOverdriveUI"
-gui.ResetOnSpawn = false
-gui.IgnoreGuiInset = false
-gui.DisplayOrder = 50
-gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-gui.Parent = playerGui
-
-local function create(className, props, parent)
-    local obj = Instance.new(className)
-    for key, value in pairs(props or {}) do
-        obj[key] = value
+local function create(class, props, parent)
+    local obj = Instance.new(class)
+    for k, v in pairs(props or {}) do
+        obj[k] = v
     end
     obj.Parent = parent
     return obj
 end
 
 local function round(parent, radius)
-    return create("UICorner", {
-        CornerRadius = UDim.new(0, radius or 10)
-    }, parent)
+    create("UICorner", { CornerRadius = UDim.new(0, radius or 10) }, parent)
 end
 
 local function stroke(parent, color, thickness, transparency)
     return create("UIStroke", {
-        Color = color or COLORS.Border,
+        Color = color or C.Red,
         Thickness = thickness or 1,
-        Transparency = transparency or 0
+        Transparency = transparency or 0,
     }, parent)
 end
 
-local function padding(parent, left, right, top, bottom)
-    return create("UIPadding", {
-        PaddingLeft = UDim.new(0, left or 0),
-        PaddingRight = UDim.new(0, right or 0),
-        PaddingTop = UDim.new(0, top or 0),
-        PaddingBottom = UDim.new(0, bottom or 0)
-    }, parent)
+local function tween(obj, duration, props)
+    local t = TweenService:Create(obj, TweenInfo.new(duration, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), props)
+    t:Play()
+    return t
 end
 
-local function makeLabel(parent, text, size, color, font)
-    return create("TextLabel", {
-        BackgroundTransparency = 1,
-        Text = text,
-        TextSize = size or 14,
-        TextColor3 = color or COLORS.White,
-        Font = font or Enum.Font.Gotham,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        TextYAlignment = Enum.TextYAlignment.Center,
-        Size = UDim2.new(1, 0, 0, 22)
-    }, parent)
-end
+local gui = create("ScreenGui", {
+    Name = "KEY_Lop94",
+    ResetOnSpawn = false,
+    IgnoreGuiInset = true,
+    ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
+}, playerGui)
 
-local function makeButton(parent, text, size)
-    local button = create("TextButton", {
-        AutoButtonColor = false,
-        Text = text,
-        TextSize = 13,
-        TextColor3 = COLORS.White,
-        Font = Enum.Font.GothamSemibold,
-        BackgroundColor3 = COLORS.Surface,
-        Size = size or UDim2.new(1, 0, 0, 38)
-    }, parent)
-    round(button, 9)
-    stroke(button, COLORS.Border, 1, 0.3)
+--// FLOATING OPEN BUTTON
+local openButton = create("TextButton", {
+    Name = "OpenButton",
+    Size = UDim2.fromOffset(58, 58),
+    Position = UDim2.new(0, 18, 0.5, -29),
+    BackgroundColor3 = C.Background,
+    Text = "K",
+    TextColor3 = C.Red,
+    TextSize = 27,
+    Font = Enum.Font.GothamBlack,
+    AutoButtonColor = false,
+}, gui)
+round(openButton, 18)
+stroke(openButton, C.Red, 2)
 
-    button.MouseEnter:Connect(function()
-        TweenService:Create(button, TweenInfo.new(0.15), {
-            BackgroundColor3 = COLORS.SurfaceHover
-        }):Play()
-    end)
-
-    button.MouseLeave:Connect(function()
-        TweenService:Create(button, TweenInfo.new(0.15), {
-            BackgroundColor3 = COLORS.Surface
-        }):Play()
-    end)
-
-    return button
-end
-
-local function tween(object, duration, properties)
-    local animation = TweenService:Create(
-        object,
-        TweenInfo.new(duration, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-        properties
-    )
-    animation:Play()
-    return animation
-end
-
--- Main window
+--// MAIN WINDOW
 local main = create("Frame", {
-    Name = "MainWindow",
+    Name = "Main",
     AnchorPoint = Vector2.new(0.5, 0.5),
-    Position = UDim2.fromScale(0.5, 0.5),
-    Size = UDim2.fromOffset(590, 410),
-    BackgroundColor3 = COLORS.Background,
+    Position = UDim2.new(0.5, 0, 0.5, 0),
+    Size = UDim2.fromOffset(650, 420),
+    BackgroundColor3 = C.Background,
     BorderSizePixel = 0,
-    ClipsDescendants = true
+    Visible = false,
+    ClipsDescendants = true,
 }, gui)
 round(main, 16)
-stroke(main, COLORS.Purple, 1.4, 0.15)
+stroke(main, C.Red, 1.5)
 
-local mainGradient = create("UIGradient", {
-    Color = ColorSequence.new({
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(15, 17, 29)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(9, 12, 21))
-    }),
-    Rotation = 35
-}, main)
+local scale = create("UIScale", { Scale = 1 }, main)
+local function updateScale()
+    local camera = workspace.CurrentCamera
+    if not camera then return end
+    local viewport = camera.ViewportSize
+    scale.Scale = math.min(viewport.X / 690, viewport.Y / 460, 1)
+end
+updateScale()
+if workspace.CurrentCamera then
+    workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(updateScale)
+end
+--[[
+    KIÊN | LỚP 94 — THCS NHUẬN PHÚ TÂN
+    BLACK NEBULA — Part 2: TopBar, Navigation & Notifications
+]]
 
--- Neon top line
-local neonLine = create("Frame", {
-    Name = "NeonLine",
+--// TOP BAR
+local top = create("Frame", {
+    Size = UDim2.new(1, 0, 0, 64),
+    BackgroundColor3 = C.Panel,
     BorderSizePixel = 0,
-    BackgroundColor3 = COLORS.Cyan,
-    Position = UDim2.new(0, 18, 0, 0),
-    Size = UDim2.new(1, -36, 0, 3)
 }, main)
-round(neonLine, 3)
 
--- Header
-local header = create("Frame", {
-    Name = "Header",
-    BackgroundTransparency = 1,
-    Position = UDim2.fromOffset(16, 10),
-    Size = UDim2.new(1, -32, 0, 57)
-}, main)
+create("Frame", {
+    Position = UDim2.new(0, 0, 1, -2),
+    Size = UDim2.new(1, 0, 0, 2),
+    BackgroundColor3 = C.Red,
+    BorderSizePixel = 0,
+}, top)
 
 local logo = create("Frame", {
-    BackgroundColor3 = COLORS.Purple,
-    Position = UDim2.fromOffset(0, 5),
-    Size = UDim2.fromOffset(42, 42)
-}, header)
+    Position = UDim2.new(0, 17, 0.5, -19),
+    Size = UDim2.fromOffset(38, 38),
+    BackgroundColor3 = C.RedDark,
+}, top)
 round(logo, 12)
+stroke(logo, C.Red, 1)
 
-create("UIGradient", {
-    Color = ColorSequence.new(COLORS.Purple, COLORS.Cyan),
-    Rotation = 35
+create("TextLabel", {
+    Size = UDim2.fromScale(1, 1),
+    BackgroundTransparency = 1,
+    Text = "K",
+    TextColor3 = C.White,
+    Font = Enum.Font.GothamBlack,
+    TextSize = 23,
 }, logo)
 
 create("TextLabel", {
+    Position = UDim2.new(0, 65, 0, 9),
+    Size = UDim2.new(0, 360, 0, 25),
     BackgroundTransparency = 1,
-    Size = UDim2.fromScale(1, 1),
-    Text = "K94",
-    TextColor3 = COLORS.White,
-    TextSize = 15,
-    Font = Enum.Font.GothamBlack
-}, logo)
-
-local title = create("TextLabel", {
-    BackgroundTransparency = 1,
-    Position = UDim2.fromOffset(54, 2),
-    Size = UDim2.new(1, -155, 0, 25),
-    Text = "PHANTOM OVERDRIVE",
-    TextColor3 = COLORS.White,
-    TextSize = 17,
+    Text = "KIÊN | LỚP 94 — THCS NHUẬN PHÚ TÂN",
+    TextColor3 = C.White,
+    TextXAlignment = Enum.TextXAlignment.Left,
     Font = Enum.Font.GothamBlack,
-    TextXAlignment = Enum.TextXAlignment.Left
-}, header)
+    TextSize = 14,
+}, top)
 
-local subtitle = create("TextLabel", {
+create("TextLabel", {
+    Position = UDim2.new(0, 66, 0, 35),
+    Size = UDim2.new(0, 300, 0, 17),
     BackgroundTransparency = 1,
-    Position = UDim2.fromOffset(55, 27),
-    Size = UDim2.new(1, -155, 0, 19),
-    Text = "KING LOP 94  /  TRAN 03",
-    TextColor3 = COLORS.Cyan,
-    TextSize = 10,
+    Text = "BLACK NEBULA  •  ULTIMATE ACTIVE HUB",
+    TextColor3 = C.Muted,
+    TextXAlignment = Enum.TextXAlignment.Left,
     Font = Enum.Font.GothamMedium,
-    TextXAlignment = Enum.TextXAlignment.Left
-}, header)
+    TextSize = 9,
+}, top)
 
-local minimizeButton = makeButton(
-    header, "—", UDim2.fromOffset(32, 30)
-)
-minimizeButton.Position = UDim2.new(1, -70, 0, 8)
-minimizeButton.TextSize = 17
-
-local closeButton = makeButton(
-    header, "×", UDim2.fromOffset(32, 30)
-)
-closeButton.Position = UDim2.new(1, -34, 0, 8)
-closeButton.TextSize = 21
-closeButton.TextColor3 = COLORS.Red
-
-local divider = create("Frame", {
-    BackgroundColor3 = COLORS.Border,
-    BackgroundTransparency = 0.25,
-    BorderSizePixel = 0,
-    Position = UDim2.fromOffset(16, 72),
-    Size = UDim2.new(1, -32, 0, 1)
-}, main)
-
--- Main content area
-local content = create("Frame", {
-    Name = "Content",
-    BackgroundTransparency = 1,
-    Position = UDim2.fromOffset(14, 84),
-    Size = UDim2.new(1, -28, 1, -98)
-}, main)
-
-local sidebar = create("Frame", {
-    Name = "Sidebar",
-    BackgroundColor3 = COLORS.Panel,
-    Size = UDim2.new(0, 130, 1, 0)
-}, content)
-round(sidebar, 12)
-stroke(sidebar, COLORS.Border, 1, 0.45)
-padding(sidebar, 8, 8, 10, 8)
-
-local tabList = create("UIListLayout", {
-    Padding = UDim.new(0, 7),
-    SortOrder = Enum.SortOrder.LayoutOrder
-}, sidebar)
-
-local page = create("ScrollingFrame", {
-    Name = "Page",
-    BackgroundColor3 = COLORS.Panel,
-    BorderSizePixel = 0,
-    Position = UDim2.new(0, 142, 0, 0),
-    Size = UDim2.new(1, -142, 1, 0),
-    CanvasSize = UDim2.new(),
-    AutomaticCanvasSize = Enum.AutomaticSize.Y,
-    ScrollBarThickness = 3,
-    ScrollBarImageColor3 = COLORS.Cyan
-}, content)
-round(page, 12)
-stroke(page, COLORS.Border, 1, 0.45)
-padding(page, 14, 14, 13, 14)
-
-local pageLayout = create("UIListLayout", {
-    Padding = UDim.new(0, 10),
-    SortOrder = Enum.SortOrder.LayoutOrder
-}, page)
-
-local tabs = {}
-local currentTab = nil
-local minimized = false
-local windowClosed = false
-local savedWindowSize = UDim2.fromOffset(590, 410)
-
-local function clearPage()
-    for _, child in ipairs(page:GetChildren()) do
-        if child ~= pageLayout and child.Name ~= "UIPadding" then
-            child:Destroy()
-        end
-    end
-end
-
-local function addTab(name, iconText)
-    local button = makeButton(
-        sidebar,
-        iconText .. "  " .. name,
-        UDim2.new(1, 0, 0, 37)
-    )
-    button.Name = name .. "Tab"
-    button.TextXAlignment = Enum.TextXAlignment.Left
-    button.TextSize = 11
-    button.LayoutOrder = #tabs + 1
-    padding(button, 9, 4, 0, 0)
-
-    tabs[#tabs + 1] = {
-        Name = name,
-        Icon = iconText,
-        Button = button
-    }
-
-    return button
-end
-
--- PHAN 1 KET THUC TAI DAY.
--- Dan tiep PHAN 2/2 ngay sau dong nay.
--- KING LOP 94 - PHANTOM OVERDRIVE | TRAN 3
--- PHAN 2/2 - COMPONENTS & STARTUP
-
--- Toast notification
-local toast = create("Frame", {
-    Name = "Toast",
-    AnchorPoint = Vector2.new(1, 0),
-    Position = UDim2.new(1, -18, 0, 18),
-    Size = UDim2.fromOffset(245, 66),
-    BackgroundColor3 = COLORS.Surface,
-    BackgroundTransparency = 1,
-    Visible = false,
-    ZIndex = 20
-}, gui)
-round(toast, 12)
-stroke(toast, COLORS.Cyan, 1, 0.2)
-
-local toastTitle = create("TextLabel", {
-    BackgroundTransparency = 1,
-    Position = UDim2.fromOffset(12, 7),
-    Size = UDim2.new(1, -24, 0, 20),
-    Text = "PHANTOM SYSTEM",
-    TextColor3 = COLORS.Cyan,
-    TextSize = 11,
+local close = create("TextButton", {
+    Position = UDim2.new(1, -45, 0, 15),
+    Size = UDim2.fromOffset(30, 30),
+    BackgroundColor3 = C.Card,
+    Text = "×",
+    TextColor3 = C.Red,
+    TextSize = 23,
     Font = Enum.Font.GothamBold,
-    TextXAlignment = Enum.TextXAlignment.Left,
-    ZIndex = 21
-}, toast)
+    AutoButtonColor = false,
+}, top)
+round(close, 9)
 
-local toastMessage = create("TextLabel", {
+--// SIDEBAR & CONTENT
+local sidebar = create("Frame", {
+    Position = UDim2.new(0, 0, 0, 66),
+    Size = UDim2.new(0, 155, 1, -66),
+    BackgroundColor3 = C.Panel,
+    BorderSizePixel = 0,
+}, main)
+
+create("UIListLayout", { Padding = UDim.new(0, 7), SortOrder = Enum.SortOrder.LayoutOrder }, sidebar)
+create("UIPadding", { PaddingTop = UDim.new(0, 17), PaddingLeft = UDim.new(0, 12), PaddingRight = UDim.new(0, 12) }, sidebar)
+
+local content = create("Frame", {
+    Position = UDim2.new(0, 155, 0, 66),
+    Size = UDim2.new(1, -155, 1, -66),
     BackgroundTransparency = 1,
-    Position = UDim2.fromOffset(12, 29),
-    Size = UDim2.new(1, -24, 0, 25),
-    Text = "",
-    TextColor3 = COLORS.White,
-    TextSize = 11,
-    Font = Enum.Font.Gotham,
-    TextWrapped = true,
+}, main)
+
+local pageTitle = create("TextLabel", {
+    Position = UDim2.new(0, 20, 0, 15),
+    Size = UDim2.new(1, -40, 0, 30),
+    BackgroundTransparency = 1,
+    Text = "HOME / OVERVIEW",
+    TextColor3 = C.White,
     TextXAlignment = Enum.TextXAlignment.Left,
-    ZIndex = 21
-}, toast)
+    Font = Enum.Font.GothamBold,
+    TextSize = 17,
+}, content)
+
+local pageHint = create("TextLabel", {
+    Position = UDim2.new(0, 20, 0, 44),
+    Size = UDim2.new(1, -40, 0, 20),
+    BackgroundTransparency = 1,
+    Text = "Hệ thống script mở rộng chuyên nghiệp.",
+    TextColor3 = C.Muted,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    Font = Enum.Font.Gotham,
+    TextSize = 11,
+}, content)
+
+local pageBody = create("ScrollingFrame", {
+    Position = UDim2.new(0, 15, 0, 75),
+    Size = UDim2.new(1, -30, 1, -88),
+    BackgroundTransparency = 1,
+    BorderSizePixel = 0,
+    ScrollBarThickness = 3,
+    ScrollBarImageColor3 = C.Red,
+    CanvasSize = UDim2.new(0, 0, 0, 0),
+    AutomaticCanvasSize = Enum.AutomaticSize.Y,
+}, content)
+
+local bodyLayout = create("UIListLayout", { Padding = UDim.new(0, 10), SortOrder = Enum.SortOrder.LayoutOrder }, pageBody)
+
+--// TOAST NOTIFICATION
+local toast = create("TextLabel", {
+    AnchorPoint = Vector2.new(0.5, 1),
+    Position = UDim2.new(0.5, 0, 1, -12),
+    Size = UDim2.fromOffset(300, 38),
+    BackgroundColor3 = C.Card,
+    TextColor3 = C.White,
+    Text = "",
+    TextSize = 12,
+    Font = Enum.Font.GothamMedium,
+    Visible = false,
+    ZIndex = 10,
+}, main)
+round(toast, 10)
+stroke(toast, C.Red, 1)
 
 local toastVersion = 0
-
-local function notify(message, titleText)
-    if not settings.Notifications then
-        return
-    end
-
+local function notify(message)
     toastVersion += 1
-    local thisVersion = toastVersion
-
-    toastTitle.Text = titleText or "PHANTOM SYSTEM"
-    toastMessage.Text = tostring(message)
+    local version = toastVersion
+    toast.Text = "  " .. message
     toast.Visible = true
-    toast.BackgroundTransparency = 1
-    toast.Position = UDim2.new(1, 15, 0, 18)
-
-    tween(toast, 0.22, {
-        BackgroundTransparency = 0,
-        Position = UDim2.new(1, -18, 0, 18)
-    })
-
-    task.delay(2.5, function()
-        if thisVersion ~= toastVersion or not toast.Parent then
-            return
-        end
-
-        tween(toast, 0.2, {
-            BackgroundTransparency = 1,
-            Position = UDim2.new(1, 15, 0, 18)
-        })
-
-        task.wait(0.22)
-
-        if thisVersion == toastVersion and toast.Parent then
-            toast.Visible = false
+    toast.TextTransparency = 1
+    tween(toast, 0.2, {TextTransparency = 0})
+    task.delay(1.8, function()
+        if toastVersion == version then
+            tween(toast, 0.2, {TextTransparency = 1})
+            task.wait(0.22)
+            if toastVersion == version then toast.Visible = false end
         end
     end)
 end
+--[[
+    KIÊN | LỚP 94 — THCS NHUẬN PHÚ TÂN
+    BLACK NEBULA — Part 3: Active Functions & Logic Execution
+]]
 
--- Reusable section title
-local function addSection(text)
-    local label = makeLabel(page, text, 12, COLORS.Cyan, Enum.Font.GothamBold)
-    label.Size = UDim2.new(1, 0, 0, 24)
-    return label
+local function getHumanoid()
+    local char = player.Character
+    if char then return char:FindFirstChildOfClass("Humanoid") end
+    return nil
 end
 
--- Reusable description card
-local function addCard(titleText, description)
-    local card = create("Frame", {
-        BackgroundColor3 = COLORS.Surface,
-        Size = UDim2.new(1, 0, 0, 70)
-    }, page)
-    round(card, 10)
-    stroke(card, COLORS.Border, 1, 0.45)
+local savedBasePosition = nil
+local flyConnection = nil
+local noclipConnection = nil
 
-    local heading = makeLabel(
-        card, titleText, 13, COLORS.White, Enum.Font.GothamBold
-    )
-    heading.Position = UDim2.fromOffset(12, 8)
-    heading.Size = UDim2.new(1, -24, 0, 21)
+--// PAGES & ACTIVE FEATURES CONFIG
+local pages = {
+    HOME = {
+        title = "HOME / TỔNG QUAN",
+        hint = "Chào mừng Kiên đến với Hub độc quyền",
+        items = {
+            {kind = "banner", title = "KIÊN LỚP 94 - NHUẬN PHÚ TÂN", desc = "Đã tích hợp các tính năng VIP hoạt động 100%."},
+            {kind = "info", title = "TRƯỜNG", desc = "THCS Nhuận Phú Tân • Vĩnh Long"},
+        },
+    },
+    PLAYER = {
+        title = "PLAYER / NHÂN VẬT",
+        hint = "Tùy chỉnh tốc độ, nhảy cao và khả năng bay",
+        items = {
+            {
+                kind = "toggle", title = "Tăng Tốc Độ Chạy (Speed 35)", 
+                desc = "Giúp nhân vật di chuyển nhanh hơn.", default = false,
+                callback = function(enabled)
+                    local hum = getHumanoid()
+                    if hum then hum.WalkSpeed = enabled and 35 or 16 end
+                end
+            },
+            {
+                kind = "toggle", title = "Nhảy Siêu Cao (Super Jump)", 
+                desc = "Tăng lực nhảy lên 100.", default = false,
+                callback = function(enabled)
+                    local hum = getHumanoid()
+                    if hum then hum.JumpPower = enabled and 100 or 50 end
+                end
+            },
+            {
+                kind = "toggle", title = "Nhảy Vô Hạn Không Trung (Inf Jump)", 
+                desc = "Cho phép bấm nhảy liên tục trên không.", default = false,
+                callback = function(enabled)
+                    if enabled then
+                        _G.InfJumpConn = UserInputService.JumpRequest:Connect(function()
+                            local hum = getHumanoid()
+                            if hum then hum:ChangeState(Enum.HumanoidStateType.Jumping) end
+                        end)
+                    else
+                        if _G.InfJumpConn then _G.InfJumpConn:Disconnect() end
+                    end
+                end
+            },
+        },
+    },
+    COMBAT = {
+        title = "MOVEMENT / BAY & XUYÊN TƯỜNG",
+        hint = "Các công cụ di chuyển đặc biệt",
+        items = {
+            {
+                kind = "toggle", title = "Đi Xuyên Tường (Noclip)", 
+                desc = "Cho phép đi xuyên qua mọi vật cản.", default = false,
+                callback = function(enabled)
+                    if enabled then
+                        noclipConnection = RunService.Stepped:Connect(function()
+                            local char = player.Character
+                            if char then
+                                for _, part in ipairs(char:GetDescendants()) do
+                                    if part:IsA("BasePart") then part.CanCollide = false end
+                                end
+                            end
+                        end)
+                    else
+                        if noclipConnection then noclipConnection:Disconnect() end
+                    end
+                end
+            },
+            {
+                kind = "toggle", title = "Bay Tự Do (Fly Hack)", 
+                desc = "Bay lượn trên không trung cực mượt.", default = false,
+                callback = function(enabled)
+                    local char = player.Character
+                    local root = char and char:FindFirstChild("HumanoidRootPart")
+                    if enabled and root then
+                        local bv = Instance.new("BodyVelocity")
+                        bv.Name = "KienFlyVel"
+                        bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+                        bv.Velocity = Vector3.new(0, 0, 0)
+                        bv.Parent = root
+                        
+                        flyConnection = RunService.RenderStepped:Connect(function()
+                            local cam = workspace.CurrentCamera
+                            local vel = Vector3.new(0,0,0)
+                            if UserInputService:IsKeyDown(Enum.KeyCode.W) then vel += cam.CoordinateFrame.LookVector * 50 end
+                            if UserInputService:IsKeyDown(Enum.KeyCode.S) then vel -= cam.CoordinateFrame.LookVector * 50 end
+                            if UserInputService:IsKeyDown(Enum.KeyCode.D) then vel += cam.CoordinateFrame.RightVector * 50 end
+                            if UserInputService:IsKeyDown(Enum.KeyCode.A) then vel -= cam.CoordinateFrame.RightVector * 50 end
+                            bv.Velocity = vel
+                        end)
+                    else
+                        if flyConnection then flyConnection:Disconnect() end
+                        if root and root:FindFirstChild("KienFlyVel") then root.KienFlyVel:Destroy() end
+                    end
+                end
+            },
+        },
+    },
+    VISUAL = {
+        title = "VISUAL / ESP NGƯỜI CHƠI",
+        hint = "Hỗ trợ nhìn xuyên vật thể",
+        items = {
+            {
+                kind = "toggle", title = "Highlight ESP Toàn Bộ Player", 
+                desc = "Phủ màu sáng quanh người chơi khác.", default = false,
+                callback = function(enabled)
+                    for _, p in ipairs(Players:GetPlayers()) do
+                        if p ~= player and p.Character then
+                            local hl = p.Character:FindFirstChild("KienHighlight")
+                            if enabled and not hl then
+                                local h = Instance.new("Highlight")
+                                h.Name = "KienHighlight"
+                                h.FillColor = Color3.fromRGB(255, 48, 75)
+                                h.OutlineColor = Color3.fromRGB(255, 255, 255)
+                                h.Parent = p.Character
+                            elseif not enabled and hl then
+                                hl:Destroy()
+                            end
+                        end
+                    end
+                end
+            },
+        },
+    },
+    SETTINGS = {
+        title = "SETTINGS / CÀI ĐẶT & TELEPORT",
+        hint = "Quản lý điểm lưu và chuyển server",
+        items = {
+            {
+                kind = "button", title = "Lưu Tọa Độ Căn Cứ (Save Base)", 
+                desc = "Ghi nhớ vị trí hiện tại của bạn.",
+                callback = function()
+                    local char = player.Character
+                    if char and char:FindFirstChild("HumanoidRootPart") then
+                        savedBasePosition = char.HumanoidRootPart.CFrame
+                        notify("Đã lưu vị trí căn cứ thành công!")
+                    end
+                end
+            },
+            {
+                kind = "button", title = "Bay Về Căn Cứ (Teleport Base)", 
+                desc = "Dịch chuyển tức thì về vị trí đã lưu.",
+                callback = function()
+                    local char = player.Character
+                    if char and char:FindFirstChild("HumanoidRootPart") and savedBasePosition then
+                        char.HumanoidRootPart.CFrame = savedBasePosition
+                        notify("Đã dịch chuyển về căn cứ!")
+                    else
+                        notify("Chưa lưu tọa độ nào cả!")
+                    end
+                end
+            },
+            {
+                kind = "button", title = "Đổi Server Nhanh (Server Hop)", 
+                desc = "Tìm server khác chơi ổn định hơn.",
+                callback = function()
+                    notify("Đang chuyển server...")
+                    pcall(function() TeleportService:Teleport(game.PlaceId, player) end)
+                end
+            },
+        },
+    },
+}
 
-    local body = makeLabel(
-        card, description, 10, COLORS.Muted, Enum.Font.Gotham
-    )
-    body.Position = UDim2.fromOffset(12, 33)
-    body.Size = UDim2.new(1, -24, 0, 27)
-    body.TextWrapped = true
-    body.TextYAlignment = Enum.TextYAlignment.Top
+local states = {}
+local currentPage = "HOME"
+local renderPage
 
+local function clearBody()
+    for _, child in ipairs(pageBody:GetChildren()) do
+        if child:IsA("GuiObject") and child ~= bodyLayout then child:Destroy() end
+    end
+end
+
+local function makeCard(titleText, descText, height)
+    local card = create("Frame", { Size = UDim2.new(1, -4, 0, height or 68), BackgroundColor3 = C.Card, BorderSizePixel = 0 }, pageBody)
+    round(card, 12)
+    stroke(card, C.RedDark, 1, 0.35)
+
+    create("TextLabel", {
+        Position = UDim2.new(0, 14, 0, 11), Size = UDim2.new(1, -28, 0, 20), BackgroundTransparency = 1,
+        Text = titleText, TextColor3 = C.White, TextXAlignment = Enum.TextXAlignment.Left, Font = Enum.Font.GothamBold, TextSize = 12,
+    }, card)
+
+    create("TextLabel", {
+        Position = UDim2.new(0, 14, 0, 34), Size = UDim2.new(1, -28, 0, 22), BackgroundTransparency = 1,
+        Text = descText, TextColor3 = C.Muted, TextXAlignment = Enum.TextXAlignment.Left, Font = Enum.Font.Gotham, TextSize = 10, TextWrapped = true,
+    }, card)
     return card
 end
 
--- Reusable ON/OFF toggle
-local function addToggle(labelText, settingKey, description)
-    local row = create("Frame", {
-        BackgroundColor3 = COLORS.Surface,
-        Size = UDim2.new(1, 0, 0, description and 66 or 48)
-    }, page)
-    round(row, 10)
-    stroke(row, COLORS.Border, 1, 0.5)
-
-    local label = makeLabel(
-        row, labelText, 12, COLORS.White, Enum.Font.GothamSemibold
-    )
-    label.Position = UDim2.fromOffset(12, description and 7 or 0)
-    label.Size = UDim2.new(1, -90, 0, 24)
-
-    if description then
-        local detail = makeLabel(row, description, 9, COLORS.Muted)
-        detail.Position = UDim2.fromOffset(12, 31)
-        detail.Size = UDim2.new(1, -90, 0, 22)
-    end
+local function addToggle(item)
+    local card = makeCard(item.title, item.desc, 72)
+    local key = currentPage .. "_" .. item.title
+    if states[key] == nil then states[key] = item.default or false end
 
     local switch = create("TextButton", {
-        AutoButtonColor = false,
-        Text = "",
-        Position = UDim2.new(1, -59, 0.5, -12),
-        Size = UDim2.fromOffset(46, 24),
-        BackgroundColor3 = COLORS.Border
-    }, row)
+        AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -13, 0.5, 0), Size = UDim2.fromOffset(42, 23),
+        BackgroundColor3 = states[key] and C.Red or Color3.fromRGB(55, 55, 66), Text = "", AutoButtonColor = false,
+    }, card)
     round(switch, 12)
 
     local knob = create("Frame", {
-        BackgroundColor3 = COLORS.White,
-        Position = UDim2.fromOffset(3, 3),
-        Size = UDim2.fromOffset(18, 18)
+        Position = states[key] and UDim2.new(1, -20, 0.5, -8) or UDim2.new(0, 4, 0.5, -8),
+        Size = UDim2.fromOffset(16, 16), BackgroundColor3 = C.White, BorderSizePixel = 0,
     }, switch)
-    round(knob, 10)
-
-    local function refresh(instant)
-        local enabled = settings[settingKey] == true
-        local targetColor = enabled and COLORS.Purple or COLORS.Border
-        local targetPosition = enabled
-            and UDim2.new(1, -21, 0, 3)
-            or UDim2.fromOffset(3, 3)
-
-        if instant then
-            switch.BackgroundColor3 = targetColor
-            knob.Position = targetPosition
-        else
-            tween(switch, 0.16, {
-                BackgroundColor3 = targetColor
-            })
-            tween(knob, 0.16, {
-                Position = targetPosition
-            })
-        end
-    end
+    round(knob, 8)
 
     switch.Activated:Connect(function()
-        settings[settingKey] = not settings[settingKey]
-        refresh(false)
-        notify(labelText .. ": " ..
-            (settings[settingKey] and "ON" or "OFF"))
+        states[key] = not states[key]
+        local enabled = states[key]
+        tween(switch, 0.18, { BackgroundColor3 = enabled and C.Red or Color3.fromRGB(55, 55, 66) })
+        tween(knob, 0.18, { Position = enabled and UDim2.new(1, -20, 0.5, -8) or UDim2.new(0, 4, 0.5, -8) })
+        notify(item.title .. (enabled and " : ĐÃ BẬT" or " : ĐÃ TẮT"))
 
-        if settingKey == "NeonEffects" then
-            neonLine.Visible = settings.NeonEffects
-        end
-
-        if settingKey == "ShowClock" and currentTab == "HOME" then
-            -- Clock visibility is updated when HOME is rendered.
-        end
-    end)
-
-    refresh(true)
-    return row
-end
-
--- Reusable slider
-local function addSlider(labelText, settingKey, minValue, maxValue)
-    local card = create("Frame", {
-        BackgroundColor3 = COLORS.Surface,
-        Size = UDim2.new(1, 0, 0, 76)
-    }, page)
-    round(card, 10)
-    stroke(card, COLORS.Border, 1, 0.5)
-
-    local label = makeLabel(
-        card, labelText, 12, COLORS.White, Enum.Font.GothamSemibold
-    )
-    label.Position = UDim2.fromOffset(12, 7)
-    label.Size = UDim2.new(1, -75, 0, 23)
-
-    local valueLabel = makeLabel(
-        card, tostring(settings[settingKey]), 11,
-        COLORS.Cyan, Enum.Font.GothamBold
-    )
-    valueLabel.Position = UDim2.new(1, -60, 0, 7)
-    valueLabel.Size = UDim2.fromOffset(48, 23)
-    valueLabel.TextXAlignment = Enum.TextXAlignment.Right
-
-    local bar = create("Frame", {
-        BackgroundColor3 = COLORS.Border,
-        Position = UDim2.new(0, 12, 0, 46),
-        Size = UDim2.new(1, -24, 0, 7)
-    }, card)
-    round(bar, 5)
-
-    local fill = create("Frame", {
-        BackgroundColor3 = COLORS.Purple,
-        Size = UDim2.new(0, 0, 1, 0)
-    }, bar)
-    round(fill, 5)
-
-    local knob = create("Frame", {
-        BackgroundColor3 = COLORS.Cyan,
-        AnchorPoint = Vector2.new(0.5, 0.5),
-        Position = UDim2.new(0, 0, 0.5, 0),
-        Size = UDim2.fromOffset(15, 15)
-    }, bar)
-    round(knob, 10)
-    stroke(knob, COLORS.White, 1, 0.35)
-
-    local function setValue(value)
-        value = math.clamp(
-            math.floor(value + 0.5),
-            minValue,
-            maxValue
-        )
-
-        settings[settingKey] = value
-        local alpha = (value - minValue) / (maxValue - minValue)
-
-        fill.Size = UDim2.new(alpha, 0, 1, 0)
-        knob.Position = UDim2.new(alpha, 0, 0.5, 0)
-        valueLabel.Text = tostring(value)
-    end
-
-    local draggingSlider = false
-
-    local function updateFromInput(input)
-        local width = bar.AbsoluteSize.X
-        if width <= 0 then
-            return
-        end
-
-        local alpha = math.clamp(
-            (input.Position.X - bar.AbsolutePosition.X) / width,
-            0, 1
-        )
-
-        setValue(minValue + alpha * (maxValue - minValue))
-    end
-
-    local hitArea = create("TextButton", {
-        Name = "SliderInput",
-        Text = "",
-        BackgroundTransparency = 1,
-        Size = UDim2.new(1, 0, 0, 30),
-        Position = UDim2.new(0, 0, 0, 35),
-        ZIndex = 5
-    }, card)
-
-    hitArea.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1
-            or input.UserInputType == Enum.UserInputType.Touch then
-            draggingSlider = true
-            updateFromInput(input)
-        end
-    end)
-
-    UserInputService.InputChanged:Connect(function(input)
-        if not draggingSlider then
-            return
-        end
-
-        if input.UserInputType == Enum.UserInputType.MouseMovement
-            or input.UserInputType == Enum.UserInputType.Touch then
-            updateFromInput(input)
-        end
-    end)
-
-    UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1
-            or input.UserInputType == Enum.UserInputType.Touch then
-            draggingSlider = false
-        end
-    end)
-
-    setValue(settings[settingKey])
-    return card
-end
-
--- Page renderers
-local function renderHome()
-    addSection("SYSTEM OVERVIEW")
-    addCard(
-        "PHANTOM OVERDRIVE",
-        "Premium interface system for your own Roblox experience."
-    )
-
-    addCard(
-        "PLAYER",
-        "Welcome, " .. player.DisplayName .. ". Your UI is ready."
-    )
-
-    local clockCard = addCard("LOCAL SESSION CLOCK", "Loading clock...")
-    local clockText = makeLabel(
-        clockCard, "--:--:--", 15, COLORS.Cyan, Enum.Font.GothamBold
-    )
-    clockText.Position = UDim2.fromOffset(12, 34)
-    clockText.Size = UDim2.new(1, -24, 0, 25)
-    clockText.Visible = settings.ShowClock
-
-    local clockConnection
-    clockConnection = RunService.Heartbeat:Connect(function()
-        if not clockCard.Parent then
-            clockConnection:Disconnect()
-            return
-        end
-
-        clockText.Visible = settings.ShowClock
-        if settings.ShowClock then
-            clockText.Text = os.date("%H:%M:%S")
-        end
-    end)
-
-    addSection("QUICK CONTROLS")
-    addToggle("Neon accent", "NeonEffects", "Toggle the cyan accent line.")
-    addToggle("Notifications", "Notifications", "Enable or silence UI toasts.")
-end
-
-local function renderPlayer()
-    addSection("PLAYER SETTINGS")
-
-    addCard(
-        "SAFE LOCAL SETTINGS",
-        "These controls change this interface only. They do not modify other players."
-    )
-
-    addToggle(
-        "Demo switch",
-        "DemoToggle",
-        "Example toggle for wiring your own game feature."
-    )
-
-    addSlider("Interface intensity", "Intensity", 0, 100)
-
-    addSlider("UI transparency", "UITransparency", 0, 80)
-
-    local applyButton = makeButton(
-        page, "APPLY UI SETTINGS", UDim2.new(1, 0, 0, 39)
-    )
-
-    applyButton.Activated:Connect(function()
-        local transparency = settings.UITransparency / 100
-        main.BackgroundTransparency = transparency * 0.45
-        notify(
-            "Intensity " .. settings.Intensity ..
-            "% | Transparency " .. settings.UITransparency .. "%",
-            "SETTINGS APPLIED"
-        )
+        if item.callback then pcall(function() item.callback(enabled) end) end
     end)
 end
 
-local function renderVisual()
-    addSection("VISUAL CUSTOMIZATION")
+renderPage = function(name)
+    currentPage = name
+    local data = pages[name]
+    if not data then return end
 
-    addCard(
-        "NEON ACCENT",
-        "Control the accent strip at the top of the interface."
-    )
+    pageTitle.Text = data.title
+    pageHint.Text = data.hint
+    clearBody()
 
-    addToggle(
-        "Neon effects",
-        "NeonEffects",
-        "Enable or disable the animated neon accent."
-    )
-
-    addToggle(
-        "Show clock",
-        "ShowClock",
-        "Display or hide the HOME clock."
-    )
-
-    local colorButton = makeButton(
-        page, "CYCLE ACCENT COLOR", UDim2.new(1, 0, 0, 40)
-    )
-
-    colorButton.Activated:Connect(function()
-        if neonLine.BackgroundColor3 == COLORS.Cyan then
-            neonLine.BackgroundColor3 = COLORS.Purple
-            notify("Accent changed to purple.")
+    for _, item in ipairs(data.items) do
+        if item.kind == "toggle" then
+            addToggle(item)
+        elseif item.kind == "banner" then
+            local card = makeCard(item.title, item.desc, 90)
+            create("Frame", { Position = UDim2.new(0, 14, 1, -5), Size = UDim2.new(0.45, 0, 0, 2), BackgroundColor3 = C.Red, BorderSizePixel = 0 }, card)
+        elseif item.kind == "button" then
+            local card = makeCard(item.title, item.desc, 76)
+            local action = create("TextButton", {
+                AnchorPoint = Vector2.new(1, 0.5), Position = UDim2.new(1, -12, 0.5, 0), Size = UDim2.fromOffset(90, 28),
+                BackgroundColor3 = C.RedDark, Text = "THỰC THI", TextColor3 = C.White, Font = Enum.Font.GothamBold, TextSize = 9, AutoButtonColor = false,
+            }, card)
+            round(action, 8)
+            action.Activated:Connect(function()
+                if item.callback then pcall(function() item.callback() end) end
+            end)
         else
-            neonLine.BackgroundColor3 = COLORS.Cyan
-            notify("Accent changed to cyan.")
+            makeCard(item.title, item.desc, 68)
         end
-    end)
-end
-
-local function renderTools()
-    addSection("TOOLS & UTILITIES")
-
-    addCard(
-        "INTERFACE CONTROL",
-        "Use these tools to manage the panel and its appearance."
-    )
-
-    local toastButton = makeButton(
-        page, "TEST NOTIFICATION", UDim2.new(1, 0, 0, 39)
-    )
-
-    toastButton.Activated:Connect(function()
-        notify("All interface systems are responding.", "SYSTEM CHECK")
-    end)
-
-    local resetButton = makeButton(
-        page, "RESET UI SETTINGS", UDim2.new(1, 0, 0, 39)
-    )
-
-    resetButton.Activated:Connect(function()
-        settings.Notifications = true
-        settings.NeonEffects = true
-        settings.ShowClock = true
-        settings.CompactMode = false
-        settings.DemoToggle = false
-        settings.Intensity = 50
-        settings.UITransparency = 0
-
-        main.BackgroundTransparency = 0
-        neonLine.Visible = true
-        neonLine.BackgroundColor3 = COLORS.Cyan
-
-        if currentTab then
-            local activeName = currentTab
-            currentTab = nil
-            local targetButton
-
-            for _, tab in ipairs(tabs) do
-                if tab.Name == activeName then
-                    targetButton = tab.Button
-                    break
-                end
-            end
-
-            if targetButton then
-                targetButton:Activate()
-            end
-        end
-
-        notify("Default settings restored.", "RESET COMPLETE")
-    end)
-
-    local minimizeTool = makeButton(
-        page, "MINIMIZE PANEL", UDim2.new(1, 0, 0, 39)
-    )
-
-    minimizeTool.Activated:Connect(function()
-        minimizeButton:Activate()
-    end)
-end
-
-local function renderInfo()
-    addSection("PROJECT INFORMATION")
-
-    addCard(
-        "KING LOP 94",
-        "PHANTOM OVERDRIVE | TRAN 3"
-    )
-
-    addCard(
-        "BUILD",
-        "Standalone Roblox LocalScript. No external UI libraries."
-    )
-
-    addCard(
-        "INPUT SUPPORT",
-        "Mouse, keyboard, touchscreen and responsive sizing."
-    )
-
-    addCard(
-        "SAFETY",
-        "UI demonstration only. Connect controls to authorized game systems."
-    )
-
-    local infoButton = makeButton(
-        page, "SHOW SYSTEM STATUS", UDim2.new(1, 0, 0, 39)
-    )
-
-    infoButton.Activated:Connect(function()
-        notify(
-            "Interface running for " .. player.DisplayName,
-            "PHANTOM STATUS"
-        )
-    end)
-end
-
-local renderers = {
-    HOME = renderHome,
-    PLAYER = renderPlayer,
-    VISUAL = renderVisual,
-    TOOLS = renderTools,
-    INFO = renderInfo
-}
-
-local function selectTab(name)
-    if not renderers[name] then
-        return
     end
-
-    currentTab = name
-    clearPage()
-
-    for _, tab in ipairs(tabs) do
-        local selected = tab.Name == name
-        tab.Button.BackgroundColor3 = selected
-            and Color3.fromRGB(48, 36, 75)
-            or COLORS.Surface
-
-        local outline = tab.Button:FindFirstChildOfClass("UIStroke")
-        if outline then
-            outline.Color = selected and COLORS.Purple or COLORS.Border
-            outline.Transparency = selected and 0 or 0.45
-        end
-
-        tab.Button.TextColor3 = selected and COLORS.Cyan or COLORS.White
-    end
-
-    renderers[name]()
-    page.CanvasPosition = Vector2.new(0, 0)
 end
 
--- Create navigation tabs
-local homeTab = addTab("HOME", "⌂")
-local playerTab = addTab("PLAYER", "◈")
-local visualTab = addTab("VISUAL", "✧")
-local toolsTab = addTab("TOOLS", "⚙")
-local infoTab = addTab("INFO", "ⓘ")
+local navItems = {"HOME", "PLAYER", "COMBAT", "VISUAL", "SETTINGS"}
+local navNames = {HOME = "Trang Chủ", PLAYER = "Nhân Vật", COMBAT = "Di Chuyển", VISUAL = "Giao Diện", SETTINGS = "Cài Đặt"}
+local navButtons = {}
 
-homeTab.Activated:Connect(function()
-    selectTab("HOME")
-end)
+for index, name in ipairs(navItems) do
+    local button = create("TextButton", {
+        Name = name, LayoutOrder = index, Size = UDim2.new(1, 0, 0, 38),
+        BackgroundColor3 = name == "HOME" and C.RedDark or C.Panel, Text = "   " .. navNames[name],
+        TextColor3 = name == "HOME" and C.White or C.Muted, TextXAlignment = Enum.TextXAlignment.Left,
+        Font = Enum.Font.GothamBold, TextSize = 11, AutoButtonColor = false,
+    }, sidebar)
+    round(button, 9)
+    navButtons[name] = button
 
-playerTab.Activated:Connect(function()
-    selectTab("PLAYER")
-end)
+    button.Activated:Connect(function()
+        for _, other in pairs(navButtons) do
+            tween(other, 0.15, { BackgroundColor3 = C.Panel })
+            other.TextColor3 = C.Muted
+        end
+        tween(button, 0.15, { BackgroundColor3 = C.RedDark })
+        button.TextColor3 = C.White
+        renderPage(name)
+    end)
+end
 
-visualTab.Activated:Connect(function()
-    selectTab("VISUAL")
-end)
+local function setOpen(visible)
+    if visible then
+        main.Visible = true
+        main.Size = UDim2.fromOffset(610, 390)
+        tween(main, 0.22, { Size = UDim2.fromOffset(650, 420) })
+    else
+        tween(main, 0.18, { Size = UDim2.fromOffset(610, 390) })
+        task.delay(0.19, function() main.Visible = false end)
+    end
+end
 
-toolsTab.Activated:Connect(function()
-    selectTab("TOOLS")
-end)
+openButton.Activated:Connect(function() setOpen(not main.Visible) end)
+close.Activated:Connect(function() setOpen(false) end)
 
-infoTab.Activated:Connect(function()
-    selectTab("INFO")
-end)
-
--- Drag window using mouse or touch
-local draggingWindow = false
-local dragInput = nil
-local dragStart = nil
-local startPosition = nil
-
-header.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1
-        or input.UserInputType == Enum.UserInputType.Touch then
-
-        draggingWindow = true
+local dragging, dragStart, startPosition
+top.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
         dragStart = input.Position
         startPosition = main.Position
-
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                draggingWindow = false
-            end
-        end)
-    end
-end)
-
-header.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement
-        or input.UserInputType == Enum.UserInputType.Touch then
-        dragInput = input
     end
 end)
 
 UserInputService.InputChanged:Connect(function(input)
-    if draggingWindow and dragInput and input == dragInput then
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
         local delta = input.Position - dragStart
-
-        main.Position = UDim2.new(
-            startPosition.X.Scale,
-            startPosition.X.Offset + delta.X,
-            startPosition.Y.Scale,
-            startPosition.Y.Offset + delta.Y
-        )
+        main.Position = UDim2.new(startPosition.X.Scale, startPosition.X.Offset + delta.X, startPosition.Y.Scale, startPosition.Y.Offset + delta.Y)
     end
 end)
 
--- Minimize and restore
-local function setMinimized(state)
-    minimized = state
-
-    if minimized then
-        content.Visible = false
-        divider.Visible = false
-        savedWindowSize = main.Size
-
-        tween(main, 0.2, {
-            Size = UDim2.new(0, savedWindowSize.X.Offset, 0, 76)
-        })
-
-        minimizeButton.Text = "+"
-    else
-        content.Visible = true
-        divider.Visible = true
-
-        tween(main, 0.2, {
-            Size = savedWindowSize
-        })
-
-        minimizeButton.Text = "—"
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = false
     end
-end
-
-minimizeButton.Activated:Connect(function()
-    setMinimized(not minimized)
 end)
 
-closeButton.Activated:Connect(function()
-    windowClosed = true
-    gui.Enabled = false
-end)
-
--- Responsive sizing
-local function updateResponsiveLayout()
-    local camera = workspace.CurrentCamera
-    if not camera then
-        return
-    end
-
-    local viewport = camera.ViewportSize
-    local isSmall = viewport.X < 650 or viewport.Y < 460
-
-    if isSmall then
-        local width = math.max(280, math.min(viewport.X - 20, 590))
-        local height = math.max(260, math.min(viewport.Y - 35, 410))
-
-        main.Size = UDim2.fromOffset(width, height)
-        savedWindowSize = main.Size
-
-        local sideWidth = width < 370 and 94 or 112
-        sidebar.Size = UDim2.new(0, sideWidth, 1, 0)
-        content.Position = UDim2.fromOffset(10, 82)
-        content.Size = UDim2.new(1, -20, 1, -92)
-        page.Position = UDim2.new(0, sideWidth + 10, 0, 0)
-        page.Size = UDim2.new(1, -sideWidth - 10, 1, 0)
-
-        for _, tab in ipairs(tabs) do
-            tab.Button.TextSize = width < 370 and 9 or 10
-        end
-
-        title.TextSize = width < 370 and 13 or 15
-        subtitle.TextSize = 9
-    else
-        main.Size = UDim2.fromOffset(590, 410)
-        savedWindowSize = main.Size
-        sidebar.Size = UDim2.new(0, 130, 1, 0)
-        content.Position = UDim2.fromOffset(14, 84)
-        content.Size = UDim2.new(1, -28, 1, -98)
-        page.Position = UDim2.new(0, 142, 0, 0)
-        page.Size = UDim2.new(1, -142, 1, 0)
-
-        for _, tab in ipairs(tabs) do
-            tab.Button.TextSize = 11
-        end
-
-        title.TextSize = 17
-        subtitle.TextSize = 10
-    end
-
-    if minimized then
-        main.Size = UDim2.new(0, savedWindowSize.X.Offset, 0, 76)
-    end
-end
-
-local function connectCamera(camera)
-    if not camera then
-        return
-    end
-
-    camera:GetPropertyChangedSignal("ViewportSize"):Connect(
-        updateResponsiveLayout
-    )
-
-    updateResponsiveLayout()
-end
-
-if workspace.CurrentCamera then
-    connectCamera(workspace.CurrentCamera)
-end
-
-workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
-    connectCamera(workspace.CurrentCamera)
-end)
-
--- Animated neon accent
-local neonClock = 0
-
-RunService.RenderStepped:Connect(function(deltaTime)
-    if not gui.Parent or not settings.NeonEffects then
-        return
-    end
-
-    neonClock += deltaTime
-
-    local alpha = (math.sin(neonClock * 1.7) + 1) / 2
-    neonLine.BackgroundColor3 = COLORS.Cyan:Lerp(
-        COLORS.Purple, alpha
-    )
-end)
-
--- Allow reopening after pressing close
-local reopenButton = create("TextButton", {
-    Name = "ReopenButton",
-    AnchorPoint = Vector2.new(1, 1),
-    Position = UDim2.new(1, -16, 1, -16),
-    Size = UDim2.fromOffset(112, 40),
-    BackgroundColor3 = COLORS.Panel,
-    Text = "✧ PHANTOM",
-    TextColor3 = COLORS.Cyan,
-    TextSize = 12,
-    Font = Enum.Font.GothamBold,
-    AutoButtonColor = false,
-    Visible = false
-}, gui)
-round(reopenButton, 12)
-stroke(reopenButton, COLORS.Purple, 1.2, 0
+renderPage("HOME")
+notify("KIÊN | LỚP 94 — THCS NHUẬN PHÚ TÂN SẴN SÀNG!")
